@@ -10,12 +10,6 @@
 (define (commonmark->html p)
   (document->html (parse-inlines (parse-blocks p))))
 
-;; Document -> Document
-;; parses the lines of the document
-;; !!!
-
-(define (parse-inlines d)
-  (... d))
 
 ;; Document -> HTML
 ;; converts the document into HTML
