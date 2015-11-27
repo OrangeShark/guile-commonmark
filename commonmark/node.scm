@@ -6,11 +6,14 @@
             node-data
             node-closed?
             no-children?
-            block-quote-node?
             document-node?
+            hrule-node?
             paragraph-node?
+            block-quote-node?
             code-block-node?
             fenced-code-node?
+            atx-header-node?
+            setext-header-node?
             child-closed?
             last-child
             rest-children
@@ -42,21 +45,35 @@
 (define (no-children? n)
   (null? (node-children n)))
 
-;; Node -> Boolean
-(define (block-quote-node? n)
-  (equal? (node-type n) 'block-quote))
 
+;; Node Node-Type -> Boolean
+(define (node-type? n t)
+  (eq? (node-type n) t))
+
+;; Node -> Boolean
 (define (document-node? n)
-  (equal? (node-type n) 'document))
+  (node-type? n 'document))
+
+(define (hrule-node? n)
+  (node-type? n 'hrule))
 
 (define (paragraph-node? n)
-  (equal? (node-type n) 'paragraph))
+  (node-type? n 'paragraph))
+
+(define (block-quote-node? n)
+  (node-type? n 'block-quote))
 
 (define (code-block-node? n)
-  (equal? (node-type n) 'code-block))
+  (node-type? n 'code-block))
 
 (define (fenced-code-node? n)
-  (equal? (node-type n) 'fenced-code))
+  (node-type? n 'fenced-code))
+
+(define (atx-header-node? n)
+  (node-type? n 'atx-header))
+
+(define (setext-header-node? n)
+  (node-type? n 'setext-header))
 
 (define (child-closed? n)
   (node-closed? (last-child n)))
