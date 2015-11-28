@@ -12,8 +12,9 @@
             block-quote-node?
             code-block-node?
             fenced-code-node?
-            atx-header-node?
-            setext-header-node?
+            header-node?
+            text-node?
+            softbreak-node?
             child-closed?
             last-child
             rest-children
@@ -26,8 +27,9 @@
 ;; - 'block-quote
 ;; - 'code-block
 ;; - 'fenced-code
-;; - 'atx-header
-;; - 'setext-header
+;; - 'header
+;; - 'text
+;; - 'softbreak
 ;; interp. The type of CommonMark block node
 
 (define-record-type <node>
@@ -69,11 +71,14 @@
 (define (fenced-code-node? n)
   (node-type? n 'fenced-code))
 
-(define (atx-header-node? n)
-  (node-type? n 'atx-header))
+(define (header-node? n)
+  (node-type? n 'header))
 
-(define (setext-header-node? n)
-  (node-type? n 'setext-header))
+(define (text-node? n)
+  (node-type? n 'text))
+
+(define (softbreak-node? n)
+  (node-type? n 'softbreak))
 
 (define (child-closed? n)
   (node-closed? (last-child n)))
