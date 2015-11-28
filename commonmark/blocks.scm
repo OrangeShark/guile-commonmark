@@ -111,7 +111,8 @@
                       #f))
           ((paragraph-node? parsed-line)
            (make-node 'paragraph
-                      (cons (last-child parsed-line) (node-children n))
+                      (cons (last-child parsed-line)
+                            (cons (make-node 'softbreak #f '() #t) (node-children n)))
                       (node-data n)
                       #f))
           (else (make-node 'paragraph (node-children n) (node-data n) #t)))))
