@@ -7,6 +7,7 @@ SOURCES =                           \
   commonmark.scm                    \
   commonmark/blocks.scm             \
   commonmark/inlines.scm            \
-  commonmark/node.scm
+  commonmark/node.scm								\
+	commonmark/sxml.scm
 
 EXTRA_DIST += pre-inst-env.in
