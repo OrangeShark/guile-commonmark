@@ -170,7 +170,7 @@
                                           `((fence . ,(match:substring s 1))
                                             (info-string . ,(string-trim-both (match:substring s 2))))
                                           #f)))
-        (else (make-node 'paragraph (list (make-node 'text l '() #f)) '() #f))))
+        (else (make-node 'paragraph (list (make-node 'text (string-trim-both l) '() #f)) '() #f))))
 
 ;; Line is one of:
 ;;  - String
