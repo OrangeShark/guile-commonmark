@@ -44,7 +44,7 @@
   `(pre (code ,@(node-children n))))
 
 (define (fenced-code-node->sxml n)
-  `(pre (code ,@(node-children n))))
+  `(pre (code ,(infostring (assq-ref (node-data n) 'info-string)),@(node-children n))))
 
 (define (header-node->sxml n)
   `(,(level n) ,@(fold-nodes node->sxml (node-children n))))
@@ -52,6 +52,9 @@
 (define (softbreak-node->sxml n)
   "
 ")
+
+(define (infostring s)
+  `(@ (class ,(string-append "language-" s))))
 
 (define (level n)
   (case (assq-ref (node-data n) 'level)

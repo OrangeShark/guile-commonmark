@@ -123,9 +123,11 @@
                     (node-data n)
                     #t))
         (else (make-node 'fenced-code
-                         (list (string-append (last-child n)
-                                              "\n"
-                                              l))
+                         (if (node-children n)
+                             (list (string-append (last-child n)
+                                                  "\n"
+                                                  l))
+                             (list l))
                          (node-data n)
                          #f))))
 
@@ -163,9 +165,9 @@
                                          #f)))
         ((fenced-code? l) => (lambda (s)
                                (make-node 'fenced-code
-                                          '("")
+                                          #f
                                           `((fence . ,(match:substring s 1))
-                                            (info-string . ,(match:substring s 2)))
+                                            (info-string . ,(string-trim-both (match:substring s 2))))
                                           #f)))
         (else (make-node 'paragraph (list (make-node 'text l '() #f)) '() #f))))
 
