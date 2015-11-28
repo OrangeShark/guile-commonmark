@@ -105,7 +105,9 @@
           ((and (setext-header? l) (= (length (node-children n)) 1))
            (make-node 'header
                       (node-children n)
-                      (node-data n)
+                      `((level . ,(if (string-any #\= l)
+                                      1
+                                      2)))
                       #f))
           ((paragraph-node? parsed-line)
            (make-node 'paragraph
