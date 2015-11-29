@@ -54,7 +54,10 @@
 ")
 
 (define (infostring s)
-  `(@ (class ,(string-append "language-" s))))
+  (let ((language (string-trim-both s)))
+    (if (string-null? language)
+        '(@)
+        `(@ (class ,(string-append "language-" language))))))
 
 (define (level n)
   (case (assq-ref (node-data n) 'level)
