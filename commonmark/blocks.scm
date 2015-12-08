@@ -37,12 +37,14 @@
                        (loop (cdr l) (1+ c)))]))))
 
 (define re-hrule (make-regexp "^((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
-(define re-block-quote (make-regexp "^ {0,3}>"))
+(define re-block-quote (make-regexp "^ {0,3}> ?"))
 (define re-atx-header (make-regexp "^ {0,3}(#{1,6}) "))
 (define re-indented-code-block (make-regexp "^    "))
 (define re-setext-header (make-regexp "^ {0,3}(=+|-+) *$"))
 (define re-empty-line (make-regexp "^ *$"))
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
+(define re-bullet-list-marker (make-regexp "^ {0,3}([-+*]) "))
+(define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)]) "))
 
 
 (define (block-quote? l)
@@ -68,6 +70,12 @@
 
 (define (fenced-code-end? line fence)
   (string-match fence line))
+
+(define (bullet-list-marker? line)
+  (regexp-exec re-bullet-list-marker line))
+
+(define (ordered-list-marker? line)
+  (regexp-exec re-ordered-list-marker line))
 
 
 ;; Port -> Document
@@ -95,6 +103,8 @@
         ((block-quote-node? n) (parse-block-quote n l))
         ((code-block-node? n) (parse-code-block n l))
         ((fenced-code-node? n) (parse-fenced-code n l))
+        ((list-node? n) (parse-list-node n l))
+        ((item-node? n) (parse-item-node n l))
         ((paragraph-node? n) (parse-paragraph n l))))
 
 (define (parse-block-quote n l)
@@ -149,6 +159,12 @@
                          (node-data n)
                          #f))))
 
+(define (parse-list-node n l)
+  n)
+
+(define (parse-item-node n l)
+  n)
+
 ;; Node String -> Node
 (define (parse-container-block n l)
  (make-node (node-type n)
@@ -168,30 +184,74 @@
 
 ;; String -> Node
 (define (parse-line l)
-  (cond ((empty-line? l) #f)
-        ((hrule? l) (make-node 'hrule '() '() #t))
-        ((block-quote? l) => (lambda (s) 
-                               (make-node 'block-quote 
-                                          (list (parse-line (match:suffix s)))
-                                          '()
-                                          #f)))
-        ((atx-header? l) => (lambda (s)
-                              (make-node 'header
-                                         (list (make-node 'text (match:suffix s) '() #t))
-                                         `((level . ,(header-level (match:substring s 1))))
-                                         #t)))
-        ((code-block? l) => (lambda (s)
-                              (make-node 'code-block
-                                         (list (match:suffix s))
-                                         '()
-                                         #f)))
-        ((fenced-code? l) => (lambda (s)
-                               (make-node 'fenced-code
-                                          #f
-                                          `((fence . ,(match:substring s 1))
-                                            (info-string . ,(string-trim-both (match:substring s 2))))
-                                          #f)))
-        (else (make-node 'paragraph (list (make-node 'text (string-trim-both l) '() #f)) '() #f))))
+  (cond ((empty-line? l)         #f)
+        ((hrule? l)              (make-hrule))
+        ((block-quote? l)         => make-block-quote)
+        ((atx-header? l)          => make-atx-header)
+        ((code-block? l)          => make-code-block)
+        ((fenced-code? l)         => make-fenced-code)
+        ((bullet-list-marker? l)  => make-bullet-list-marker)
+        ((ordered-list-marker? l) => make-ordered-list-marker)
+        (else                     (make-paragraph l))))
+
+
+(define (make-hrule)
+  (make-node 'hrule '() '() #t))
+
+(define (make-block-quote match)
+  (make-node 'block-quote
+             (list (parse-line (match:suffix match)))
+             '()
+             #f))
+
+(define (make-atx-header match)
+  (make-node 'header
+             (list (make-node 'text (match:suffix match) '() #t))
+             '()
+             #f))
+
+(define (make-code-block match)
+  (make-node 'code-block
+             (list (match:suffix match))
+             '()
+             #f))
+
+(define (make-fenced-code match)
+  (make-node 'fenced-code
+             #f
+             `((fence . ,(match:substring match 1))
+               (info-string . ,(string-trim-both (match:substring match 2))))
+             #f))
+
+(define (make-bullet-list-marker match)
+  (make-node 'list
+             (list (make-item (match:suffix match)))
+             `((type . bullet)
+               (tight . #t)
+               (bullet . ,(match:substring match 1)))
+             #f))
+
+(define (make-ordered-list-marker match)
+  (make-node 'list
+             (list (make-item (match:suffix match)))
+             `((type . ordered)
+               (start . ,(string->number (match:substring match 1)))
+               (tight . #t)
+               (delimiter . (delimiter-type (match:substring match 2))))
+             #f))
+
+(define (make-item line)
+  (make-node 'item
+             (list (parse-line line))
+             '()
+             #f))
+
+(define (make-paragraph line)
+  (make-node 'paragraph
+             (list (make-node 'text (string-trim-both line) '() #f))
+             '()
+             #f))
+
 
 ;; Line is one of:
 ;;  - String

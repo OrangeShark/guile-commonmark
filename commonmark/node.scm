@@ -29,6 +29,8 @@
             block-quote-node?
             code-block-node?
             fenced-code-node?
+            list-node?
+            item-node?
             header-node?
             text-node?
             softbreak-node?
@@ -44,6 +46,8 @@
 ;; - 'block-quote
 ;; - 'code-block
 ;; - 'fenced-code
+;; - 'list
+;; - 'item
 ;; - 'header
 ;; - 'text
 ;; - 'softbreak
@@ -87,6 +91,12 @@
 
 (define (fenced-code-node? n)
   (node-type? n 'fenced-code))
+
+(define (list-node? n)
+  (node-type? n 'list))
+
+(define (item-node? n)
+  (node-type? n 'item))
 
 (define (header-node? n)
   (node-type? n 'header))
