@@ -35,6 +35,7 @@
             text-node?
             softbreak-node?
             child-closed?
+            close-node
             last-child
             rest-children
             print-node))
@@ -67,7 +68,6 @@
 ;; returns true if the n has no children
 (define (no-children? n)
   (null? (node-children n)))
-
 
 ;; Node Node-Type -> Boolean
 (define (node-type? n t)
@@ -109,6 +109,13 @@
 
 (define (child-closed? n)
   (node-closed? (last-child n)))
+
+
+
+;; Node -> Node
+;; closes the node without changing any of the other properties
+(define (close-node n)
+  (make-node (node-type n) (node-children n) (node-data n) #t))
 
 (define (last-child n)
   (car (node-children n)))

@@ -110,7 +110,7 @@
 (define (parse-block-quote n l)
   (cond ((block-quote? l) => (lambda (rest-line)
                                (parse-container-block n (match:suffix rest-line))))
-        (else (make-node 'block-quote (node-children n) (node-data n) #t))))
+        (else (close-node n))))
 
 (define (parse-code-block n l)
   (cond ((code-block? l) => (lambda (rest-line)
@@ -120,15 +120,12 @@
                                                               (match:suffix rest-line)))
                                          (node-data n)
                                          #f)))
-        (else (make-node 'code-block (node-children n) (node-data n) #t))))
+        (else (close-node n))))
 
 (define (parse-paragraph n l)
   (let ((parsed-line (parse-line l)))
     (cond ((not parsed-line)
-           (make-node 'paragraph
-                      (node-children n)
-                      (node-data n)
-                      #t))
+           (close-node n))
           ((and (setext-header? l) (= (length (node-children n)) 1))
            (make-node 'header
                       (node-children n)
@@ -146,10 +143,7 @@
 
 (define (parse-fenced-code n l)
   (cond ((fenced-code-end? l (cdr (assoc 'fence (node-data n))))
-         (make-node 'fenced-code
-                    (node-children n)
-                    (node-data n)
-                    #t))
+         (close-node n))
         (else (make-node 'fenced-code
                          (if (node-children n)
                              (list (string-append (last-child n)
@@ -160,7 +154,9 @@
                          #f))))
 
 (define (parse-list-node n l)
-  n)
+  (let ((item (parse-item-node (last-child n) l)))
+    (if (node-closed? item)
+        ())))
 
 (define (parse-item-node n l)
   n)
