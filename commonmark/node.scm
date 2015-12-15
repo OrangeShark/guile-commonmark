@@ -49,6 +49,8 @@
             close-node
             last-child
             rest-children
+            add-child-node
+            replace-last-child
             print-node))
 
 ;; Node-Type is one of:
@@ -108,7 +110,7 @@
 ;; with text nodes as children
 ;; String -> Node
 (define (make-paragraph-node text)
-  (make-node 'paragraph (list (make-text-node text #f)) '() #f))
+  (make-node 'paragraph (list (make-text-node text)) '() #f))
 
 ;; Node -> Boolean
 (define (paragraph-node? n)
@@ -172,7 +174,7 @@
 ;; represents either a atx header or setext header
 ;; String Level -> Node
 (define (make-header-node text level)
-  (make-node 'header (list (make-text-node text #t)) `(level . ,level) #t))
+  (make-node 'header (list (make-text-node text)) `(level . ,level) #t))
 
 ;; Node -> Boolean
 (define (header-node? n)
@@ -180,8 +182,8 @@
 
 ;; Text node
 ;; String Boolean -> Node
-(define (make-text-node text closed)
-  (make-node 'text (string-trim-both text) '() closed))
+(define (make-text-node text)
+  (make-node 'text (string-trim-both text) '() #t))
 
 (define (text-node? n)
   (node-type? n 'text))
@@ -208,6 +210,18 @@
 
 (define (rest-children n)
   (cdr (node-children n)))
+
+(define (add-child-node node child)
+  (make-node (node-type node)
+             (cons child (node-children node))
+             (node-data node)
+             (node-closed? node)))
+
+(define (replace-last-child node new-child)
+  (make-node (node-type node)
+             (cons new-child (rest-children node))
+             (node-data node)
+             (node-closed? node)))
 
 (define (print-node n)
   (define (inner n d)

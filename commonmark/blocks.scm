@@ -92,13 +92,10 @@
 ;; Node String -> Node
 (define (parse-open-block n l)
   (cond ((node-closed? n) n)
-        ((no-children? n) (make-node (node-type n)
-                                     (let ((parsed-line (parse-line l)))
-                                       (if parsed-line
-                                           (list (parse-line l))
-                                           '()))
-                                     (node-data n)
-                                     #f))
+        ((no-children? n) (let ((parsed-line (parse-line l)))
+                            (if parsed-line
+                                (add-child-node n parsed-line)
+                                n)))
         ((document-node? n) (parse-container-block n l))
         ((block-quote-node? n) (parse-block-quote n l))
         ((code-block-node? n) (parse-code-block n l))
@@ -114,12 +111,10 @@
 
 (define (parse-code-block n l)
   (cond ((code-block? l) => (lambda (rest-line)
-                              (make-node 'code-block
-                                         (list (string-append (last-child n)
-                                                              "\n"
-                                                              (match:suffix rest-line)))
-                                         (node-data n)
-                                         #f)))
+                              (replace-last-child n
+                                                  (string-append (last-child n)
+                                                                 "\n"
+                                                                 (match:suffix rest-line)))))
         (else (close-node n))))
 
 (define (parse-paragraph n l)
@@ -127,31 +122,24 @@
     (cond ((not parsed-line)
            (close-node n))
           ((and (setext-header? l) (= (length (node-children n)) 1))
-           (make-node 'header
-                      (node-children n)
-                      `((level . ,(if (string-any #\= l)
-                                      1
-                                      2)))
-                      #f))
+           (make-header-node (node-children (last-child n))
+                             (if (string-any #\= l)
+                                 1
+                                 2)))
           ((paragraph-node? parsed-line)
-           (make-node 'paragraph
-                      (cons (last-child parsed-line)
-                            (cons (make-node 'softbreak #f '() #t) (node-children n)))
-                      (node-data n)
-                      #f))
-          (else (make-node 'paragraph (node-children n) (node-data n) #t)))))
+           (add-child-node (add-child-node n (make-softbreak-node))
+                           (last-child parsed-line)))
+          (else (close-node n)))))
 
 (define (parse-fenced-code n l)
   (cond ((fenced-code-end? l (cdr (assoc 'fence (node-data n))))
          (close-node n))
-        (else (make-node 'fenced-code
-                         (if (node-children n)
-                             (list (string-append (last-child n)
-                                                  "\n"
-                                                  l))
-                             (list l))
-                         (node-data n)
-                         #f))))
+        ((no-children? n)
+         (add-child-node n l))
+        (else (replace-last-child n
+                                  (string-append (last-child n)
+                                                 "\n"
+                                                 l)))))
 
 (define (parse-list-node n l)
   (let ((item (parse-item-node (last-child n) l)))
@@ -163,17 +151,16 @@
 
 ;; Node String -> Node
 (define (parse-container-block n l)
- (make-node (node-type n)
-            (cond ((and (node-closed? (last-child n)) (not (empty-line? l)))
-                   (cons (parse-line l) (node-children n)))
-                  (else (let ((new-child (parse-open-block (last-child n) l)))
-                          (cond ((and (not (empty-line? l))
-                                      (node-closed? new-child)
-                                      (not (fenced-code-node? new-child)))
-                                 (cons (parse-line l) (cons new-child (rest-children n))))
-                                (else (cons new-child (rest-children n)))))))
-            (node-data n)
-            #f))
+  (cond ((and (node-closed? (last-child n)) (not (empty-line? l)))
+         (add-child-node n (parse-line l)))
+        (else (let ((new-child (parse-open-block (last-child n) l)))
+                (cond ((and (not (empty-line? l))
+                            (node-closed? new-child)
+                            (not (fenced-code-node? new-child))
+                            (not (header-node? new-child)))
+                       (add-child-node (replace-last-child n new-child)
+                                       (parse-line l)))
+                      (else (replace-last-child n new-child)))))))
 
 (define (header-level s)
   (string-length s))
