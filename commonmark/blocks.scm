@@ -43,8 +43,8 @@
 (define re-setext-header (make-regexp "^ {0,3}(=+|-+) *$"))
 (define re-empty-line (make-regexp "^ *$"))
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
-(define re-bullet-list-marker (make-regexp "^ {0,3}([-+*]) "))
-(define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)]) "))
+(define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
+(define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)])( +|$)"))
 
 
 (define (block-quote? l)
@@ -144,7 +144,7 @@
 (define (parse-list-node n l)
   (let ((item (parse-item-node (last-child n) l)))
     (if (node-closed? item)
-        n)))
+         n)))
 
 (define (parse-item-node n l)
   n)
@@ -197,20 +197,25 @@
      (info-string . ,(string-trim-both (match:substring match 2))))))
 
 (define (make-bullet-list-marker match)
-  (make-list-node (make-item (match:suffix match))
+  (make-list-node (make-item (match:suffix match) 1 (match:substring match 2))
                   `((type . bullet)
                     (tight . #t)
                     (bullet . ,(match:substring match 1)))))
 
 (define (make-ordered-list-marker match)
-  (make-list-node (make-item (match:suffix match))
+  (make-list-node (make-item (match:suffix match) 2 (match:substring match 3))
                   `((type . ordered)
                     (start . ,(string->number (match:substring match 1)))
                     (tight . #t)
                     (delimiter . (delimiter-type (match:substring match 2))))))
 
-(define (make-item line)
-  (make-item-node (parse-line line)))
+(define (make-item line offset spaces)
+  (let ((padding (string-length spaces)))
+    (cond ((>= padding 5)
+           (make-item-node (parse-line (string-append (substring spaces 1) line)) (+ offset 1)))
+          ((< padding 1)
+           (make-item-node #f (+ offset 1)))
+          (else (make-item-node (parse-line line) (+ offset padding))))))
 
 (define (make-paragraph line)
   (make-paragraph-node line))

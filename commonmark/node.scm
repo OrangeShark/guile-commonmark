@@ -161,8 +161,8 @@
 ;; Item node
 ;; represents a item which can only be in a list
 ;; Node -> Node
-(define (make-item-node node)
-  (make-node 'item (list node) '() #f))
+(define (make-item-node node padding)
+  (make-node 'item (if node (list node) '()) `((padding . ,padding)) #f))
 
 ;; Node -> Boolean
 (define (item-node? n)
