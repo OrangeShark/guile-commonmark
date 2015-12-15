@@ -82,7 +82,7 @@
 ;; parses commonmark by blocks and creates a document containing blocks
 ;; !!!
 (define (parse-blocks p)
-  (let loop ((root (make-node 'document '() '() #f))
+  (let loop ((root (make-document-node))
              (line (read-tabless-line p)))
     (if (eof-object? line)
         root 
@@ -156,7 +156,7 @@
 (define (parse-list-node n l)
   (let ((item (parse-item-node (last-child n) l)))
     (if (node-closed? item)
-        ())))
+        n)))
 
 (define (parse-item-node n l)
   n)
@@ -180,8 +180,8 @@
 
 ;; String -> Node
 (define (parse-line l)
-  (cond ((empty-line? l)         #f)
-        ((hrule? l)              (make-hrule))
+  (cond ((empty-line? l)          #f)
+        ((hrule? l)               (make-hrule))
         ((block-quote? l)         => make-block-quote)
         ((atx-header? l)          => make-atx-header)
         ((code-block? l)          => make-code-block)
@@ -192,61 +192,41 @@
 
 
 (define (make-hrule)
-  (make-node 'hrule '() '() #t))
+  (make-hrule-node))
 
 (define (make-block-quote match)
-  (make-node 'block-quote
-             (list (parse-line (match:suffix match)))
-             '()
-             #f))
+  (make-block-quote-node (parse-line (match:suffix match))) )
 
 (define (make-atx-header match)
-  (make-node 'header
-             (list (make-node 'text (match:suffix match) '() #t))
-             '()
-             #f))
+  (make-header-node (match:suffix match)
+                    (header-level (match:substring match 1))))
 
 (define (make-code-block match)
-  (make-node 'code-block
-             (list (match:suffix match))
-             '()
-             #f))
+  (make-code-block-node (match:suffix match)))
 
 (define (make-fenced-code match)
-  (make-node 'fenced-code
-             #f
-             `((fence . ,(match:substring match 1))
-               (info-string . ,(string-trim-both (match:substring match 2))))
-             #f))
+  (make-fenced-code-node 
+   `((fence . ,(match:substring match 1))
+     (info-string . ,(string-trim-both (match:substring match 2))))))
 
 (define (make-bullet-list-marker match)
-  (make-node 'list
-             (list (make-item (match:suffix match)))
-             `((type . bullet)
-               (tight . #t)
-               (bullet . ,(match:substring match 1)))
-             #f))
+  (make-list-node (make-item (match:suffix match))
+                  `((type . bullet)
+                    (tight . #t)
+                    (bullet . ,(match:substring match 1)))))
 
 (define (make-ordered-list-marker match)
-  (make-node 'list
-             (list (make-item (match:suffix match)))
-             `((type . ordered)
-               (start . ,(string->number (match:substring match 1)))
-               (tight . #t)
-               (delimiter . (delimiter-type (match:substring match 2))))
-             #f))
+  (make-list-node (make-item (match:suffix match))
+                  `((type . ordered)
+                    (start . ,(string->number (match:substring match 1)))
+                    (tight . #t)
+                    (delimiter . (delimiter-type (match:substring match 2))))))
 
 (define (make-item line)
-  (make-node 'item
-             (list (parse-line line))
-             '()
-             #f))
+  (make-item-node (parse-line line)))
 
 (define (make-paragraph line)
-  (make-node 'paragraph
-             (list (make-node 'text (string-trim-both line) '() #f))
-             '()
-             #f))
+  (make-paragraph-node line))
 
 
 ;; Line is one of:

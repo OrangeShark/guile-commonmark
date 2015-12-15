@@ -23,16 +23,27 @@
             node-data
             node-closed?
             no-children?
+            make-document-node
             document-node?
+            make-hrule-node
             hrule-node?
+            make-paragraph-node
             paragraph-node?
+            make-block-quote-node
             block-quote-node?
+            make-code-block-node
             code-block-node?
+            make-fenced-code-node
             fenced-code-node?
+            make-list-node
             list-node?
+            make-item-node
             item-node?
+            make-header-node
             header-node?
+            make-text-node
             text-node?
+            make-softbreak-node
             softbreak-node?
             child-closed?
             close-node
@@ -73,36 +84,111 @@
 (define (node-type? n t)
   (eq? (node-type n) t))
 
+
+;; Document node
+;; A document node is the root of a commonmark document
+(define (make-document-node)
+  (make-node 'document '() '() #f))
+
 ;; Node -> Boolean
 (define (document-node? n)
   (node-type? n 'document))
 
+;; Hrule node
+;; A hrule node represents a horizontal rule in a commonmark document
+(define (make-hrule-node)
+  (make-node 'hrule '() '() #t))
+
+;; Node -> Boolean
 (define (hrule-node? n)
   (node-type? n 'hrule))
 
+;; Paragraph node
+;; A paragraph node represents a paragraph in a commonmark document
+;; with text nodes as children
+;; String -> Node
+(define (make-paragraph-node text)
+  (make-node 'paragraph (list (make-text-node text #f)) '() #f))
+
+;; Node -> Boolean
 (define (paragraph-node? n)
   (node-type? n 'paragraph))
 
+;; Block quote node
+;; A block quote node represents a block quote in a commonmark document
+;; which contains other nodes as children
+;; Node -> Node
+(define (make-block-quote-node node)
+  (make-node 'block-quote (list node) '() #f))
+
+;; Node -> Boolean
 (define (block-quote-node? n)
   (node-type? n 'block-quote))
 
+;; Code block node
+;; represents a code block which contains string as children
+;; String -> Node
+(define (make-code-block-node line)
+  (make-node 'code-block (list line) '() #f))
+
+;; Node -> Boolean
 (define (code-block-node? n)
   (node-type? n 'code-block))
 
+;; Fenced code node
+;; represents a fenced code block which contains a fence type
+;; and info-string
+;; Data -> Node
+(define (make-fenced-code-node data)
+  (make-node 'fenced-node #f data #f))
+
+;; Node -> Boolean
 (define (fenced-code-node? n)
   (node-type? n 'fenced-code))
 
+;; List node
+;; represents a list which only contains item nodes
+;; Node Data -> Node 
+(define (make-list-node item data)
+  (make-node 'list (list item) data #f))
+
+;; Node-> Boolean
 (define (list-node? n)
   (node-type? n 'list))
 
+;; Item node
+;; represents a item which can only be in a list
+;; Node -> Node
+(define (make-item-node node)
+  (make-node 'item (list node) '() #f))
+
+;; Node -> Boolean
 (define (item-node? n)
   (node-type? n 'item))
 
+
+;; Level is an Integer [1-6]
+;; Header node
+;; represents either a atx header or setext header
+;; String Level -> Node
+(define (make-header-node text level)
+  (make-node 'header (list (make-text-node text #t)) `(level . ,level) #t))
+
+;; Node -> Boolean
 (define (header-node? n)
   (node-type? n 'header))
 
+;; Text node
+;; String Boolean -> Node
+(define (make-text-node text closed)
+  (make-node 'text (string-trim-both text) '() closed))
+
 (define (text-node? n)
   (node-type? n 'text))
+
+;; Softbreak node
+(define (make-softbreak-node)
+  (make-node 'softbreak '() '() #t))
 
 (define (softbreak-node? n)
   (node-type? n 'softbreak))
