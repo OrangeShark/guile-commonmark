@@ -182,14 +182,12 @@
                (replace-last-child n (parse-fenced-code (last-child n) l))
                (replace-last-child n (close-node (last-child n)))))
           ((n-spaces? padding l)
-           (if (or (no-children? n) (node-closed? (last-child n)))
-               (add-child-node n (parse-line (substring l padding)))
-               (replace-last-child n (parse-open-block (last-child n) (substring l padding)))))
+           (parse-container-block n (substring l padding)))
           (else (close-node n)))))
 
 ;; Node String -> Node
 (define (parse-container-block n l)
-  (cond ((and (node-closed? (last-child n)) (not (empty-line? l)))
+  (cond ((or (no-children? n) (and (node-closed? (last-child n)) (not (empty-line? l))))
          (add-child-node n (parse-line l)))
         (else (let ((new-child (parse-open-block (last-child n) l)))
                 (cond ((and (not (empty-line? l))
@@ -245,7 +243,7 @@
                   `((type . ordered)
                     (start . ,(string->number (match:substring match 1)))
                     (tight . #t)
-                    (delimiter . (match:substring match 2)))))
+                    (delimiter . ,(match:substring match 2)))))
 
 (define (make-item line offset spaces)
   (let ((padding (string-length spaces)))
