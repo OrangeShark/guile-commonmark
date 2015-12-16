@@ -100,8 +100,7 @@
         ((block-quote-node? n) (parse-block-quote n l))
         ((code-block-node? n) (parse-code-block n l))
         ((fenced-code-node? n) (parse-fenced-code n l))
-        ((list-node? n) (parse-list-node n l))
-        ((item-node? n) (parse-item-node n l))
+        ((list-node? n) (parse-list n l))
         ((paragraph-node? n) (parse-paragraph n l))))
 
 (define (parse-block-quote n l)
@@ -141,13 +140,52 @@
                                                  "\n"
                                                  l)))))
 
-(define (parse-list-node n l)
-  (let ((item (parse-item-node (last-child n) l)))
-    (if (node-closed? item)
-         n)))
+(define (list-type n)
+  (assq-ref (node-data n) 'type))
 
-(define (parse-item-node n l)
-  n)
+(define (list-bullet n)
+  (assq-ref (node-data n) 'bullet))
+
+(define (list-delimiter n)
+  (assq-ref (node-data n) 'delimiter))
+
+(define (eq-list-types? l1 l2)
+  (or (and (eq? (list-type l1) (list-type l2) 'bullet)
+           (string=? (list-bullet l1) (list-bullet l2)))
+      (and (eq? (list-type l1) (list-type l2) 'ordered)
+           (string=? (list-delimiter l1) (list-delimiter l2)))))
+
+(define (parse-list n l)
+  (let ((item (parse-item (last-child n) l)))
+    (cond ((and (node-closed? item) (empty-line? l))
+           (close-node (replace-last-child n item)))
+          ((node-closed? item)
+           (let ((new-list (parse-line l)))
+             (cond ((and (list-node? new-list)
+                         (eq-list-types? n new-list))
+                    (add-child-node (replace-last-child n item)
+                                    (last-child new-list)))
+                   (else (close-node (replace-last-child n item))))))
+          (else (replace-last-child n item)))))
+
+(define (n-spaces? n s)
+  (>= (string-index s (lambda (c) (not (char=? #\space c)))) n))
+
+(define (parse-item n l)
+  (let ((padding (assq-ref (node-data n) 'padding)))
+    (cond ((and (not (no-children? n))
+                (node-closed? (last-child n))
+                (empty-line? l))
+           (close-node n))
+          ((empty-line? l)
+           (if (fenced-code-node? (last-child n))
+               (replace-last-child n (parse-fenced-code (last-child n) l))
+               (replace-last-child n (close-node (last-child n)))))
+          ((n-spaces? padding l)
+           (if (or (no-children? n) (node-closed? (last-child n)))
+               (add-child-node n (parse-line (substring l padding)))
+               (replace-last-child n (parse-open-block (last-child n) (substring l padding)))))
+          (else (close-node n)))))
 
 ;; Node String -> Node
 (define (parse-container-block n l)
@@ -207,7 +245,7 @@
                   `((type . ordered)
                     (start . ,(string->number (match:substring match 1)))
                     (tight . #t)
-                    (delimiter . (delimiter-type (match:substring match 2))))))
+                    (delimiter . (match:substring match 2)))))
 
 (define (make-item line offset spaces)
   (let ((padding (string-length spaces)))
