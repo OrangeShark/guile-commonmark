@@ -142,7 +142,7 @@
 ;; and info-string
 ;; Data -> Node
 (define (make-fenced-code-node data)
-  (make-node 'fenced-node #f data #f))
+  (make-node 'fenced-code '() data #f))
 
 ;; Node -> Boolean
 (define (fenced-code-node? n)
@@ -174,7 +174,7 @@
 ;; represents either a atx header or setext header
 ;; String Level -> Node
 (define (make-header-node text level)
-  (make-node 'header (list (make-text-node text)) `(level . ,level) #t))
+  (make-node 'header (list (make-text-node text)) `((level . ,level)) #t))
 
 ;; Node -> Boolean
 (define (header-node? n)

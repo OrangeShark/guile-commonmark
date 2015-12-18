@@ -19,7 +19,7 @@
   #:use-module (srfi srfi-1)
   #:use-module (sxml simple)
   #:use-module (commonmark node)
-  #:export (document->xml))
+  #:export (document->sxml))
 
 ;; Document -> xml
 ;; converts the document into HTML
@@ -41,6 +41,7 @@
         ((code-block-node? n) (code-block-node->sxml n))
         ((fenced-code-node? n) (fenced-code-node->sxml n))
         ((header-node? n) (header-node->sxml n))
+        ((list-node? n) (list-node->sxml n))
         ((text-node? n) (text-node->sxml n))
         ((softbreak-node? n) (softbreak-node->sxml n))
         (else (error "unknown node"))))
@@ -65,6 +66,17 @@
 
 (define (header-node->sxml n)
   `(,(level n) ,@(fold-nodes node->sxml (node-children n))))
+
+(define (list-type n)
+  (case (assq-ref (node-data n) 'type)
+    ((bullet) 'ul)
+    (else 'ol)))
+
+(define (list-node->sxml n)
+  `(,(list-type n) ,@(fold-nodes item-node->sxml (node-children n))))
+
+(define (item-node->sxml n)
+  `(li ,@(fold-nodes node->sxml (node-children n))))
 
 (define (softbreak-node->sxml n)
   "

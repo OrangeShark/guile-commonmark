@@ -92,10 +92,6 @@
 ;; Node String -> Node
 (define (parse-open-block n l)
   (cond ((node-closed? n) n)
-        ((no-children? n) (let ((parsed-line (parse-line l)))
-                            (if parsed-line
-                                (add-child-node n parsed-line)
-                                n)))
         ((document-node? n) (parse-container-block n l))
         ((block-quote-node? n) (parse-block-quote n l))
         ((code-block-node? n) (parse-code-block n l))
