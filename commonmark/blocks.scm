@@ -122,8 +122,7 @@
                                  1
                                  2)))
           ((paragraph-node? parsed-line)
-           (add-child-node (add-child-node n (make-softbreak-node))
-                           (last-child parsed-line)))
+           (replace-last-child n (join-text-nodes (last-child n) (last-child parsed-line))))
           (else (close-node n)))))
 
 (define (parse-fenced-code n l)

@@ -16,7 +16,9 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark node)
+  #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
+  #:use-module (srfi srfi-26)
   #:export (make-node
             node-type
             node-children
@@ -42,6 +44,7 @@
             make-header-node
             header-node?
             make-text-node
+            join-text-nodes
             text-node?
             make-softbreak-node
             softbreak-node?
@@ -183,7 +186,15 @@
 ;; Text node
 ;; String Boolean -> Node
 (define (make-text-node text)
-  (make-node 'text (string-trim-both text) '() #t))
+  (make-node 'text (string-trim text) '() #t))
+
+(define (join-text-nodes tn1 tn2)
+  (make-node 'text
+             (string-append (node-children tn1)
+                            "\n"
+                            (node-children tn2))
+             '()
+             #t))
 
 (define (text-node? n)
   (node-type? n 'text))
@@ -222,6 +233,15 @@
              (cons new-child (rest-children node))
              (node-data node)
              (node-closed? node)))
+
+(define (fold-node f n)
+  (cond ((not (node? n)) n)
+        (else (f (make-node (node-type n)
+                            (fold (cut cons (fold-node f <>) <>)
+                                  '()
+                                  (node-children n))
+                            (node-data n)
+                            (node-closed? n))))))
 
 (define (print-node n)
   (define (inner n d)
