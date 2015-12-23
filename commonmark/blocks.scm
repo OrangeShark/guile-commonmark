@@ -126,7 +126,7 @@
           (else (close-node n)))))
 
 (define (parse-fenced-code n l)
-  (cond ((fenced-code-end? l (cdr (assoc 'fence (node-data n))))
+  (cond ((fenced-code-end? l (node-get-data n 'fence))
          (close-node n))
         ((no-children? n)
          (add-child-node n l))
@@ -136,13 +136,13 @@
                                                  l)))))
 
 (define (list-type n)
-  (assq-ref (node-data n) 'type))
+  (node-get-data n 'type))
 
 (define (list-bullet n)
-  (assq-ref (node-data n) 'bullet))
+  (node-get-data n 'bullet))
 
 (define (list-delimiter n)
-  (assq-ref (node-data n) 'delimiter))
+  (node-get-data n 'delimiter))
 
 (define (eq-list-types? l1 l2)
   (or (and (eq? (list-type l1) (list-type l2) 'bullet)
@@ -167,7 +167,7 @@
   (>= (string-index s (lambda (c) (not (char=? #\space c)))) n))
 
 (define (parse-item n l)
-  (let ((padding (assq-ref (node-data n) 'padding)))
+  (let ((padding (node-get-data n 'padding)))
     (cond ((and (not (no-children? n))
                 (node-closed? (last-child n))
                 (empty-line? l))
@@ -178,7 +178,7 @@
                (replace-last-child n (close-node (last-child n)))))
           ((n-spaces? padding l)
            (parse-container-block n (substring l padding)))
-          (else (close-node n)))))
+          (else (close-node (replace-last-child n (close-node (last-child n))))))))
 
 ;; Node String -> Node
 (define (parse-container-block n l)
