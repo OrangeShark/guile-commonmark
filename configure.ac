@@ -4,8 +4,6 @@ AC_CONFIG_SRCDIR(commonmark)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
-PKG_CHECK_MODULES([GUILE], [guile-2.0])
-
 GUILE_PROGS
 
 AC_CONFIG_FILES([Makefile])
