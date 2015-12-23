@@ -10,5 +10,6 @@ GUILE_PROGS
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([pre-inst-env], [chmod +x pre-inst-env])
+AC_CONFIG_FILES([test-env], [chmod +x test-env])
 
 AC_OUTPUT

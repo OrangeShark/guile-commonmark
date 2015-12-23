@@ -1,11 +1,13 @@
 *~
 *.go
+*.log
+*.trs
 aclocal.m4
 autom4te.cache/
 build-aux/
 Makefile
 Makefile.in
-config.log
 config.status
 configure
 pre-inst-env
+test-env
