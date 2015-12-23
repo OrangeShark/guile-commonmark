@@ -24,6 +24,9 @@
 (test-assert "no-children, true when no children"
              (no-children? (make-document-node)))
 
+(test-assert "no-children, false when children"
+             (not (no-children? (make-document-node))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
