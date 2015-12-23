@@ -1,0 +1,7 @@
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y guile-2.0 dh-autoreconf autoconf automake make
+
+install: true
+
+script: ./bootstrap && ./configure && make && make check
