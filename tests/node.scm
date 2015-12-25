@@ -21,11 +21,13 @@
 
 (test-begin "node")
 
+(define test-node (make-node 'test))
+
 (test-assert "no-children, true when no children"
-             (no-children? (make-document-node)))
+             (no-children? test-node))
 
 (test-assert "no-children, false when children"
-             (not (no-children? (make-document-node))))
+             (not (no-children? (add-child-node test-node test-node))))
 
 (test-end)
 
