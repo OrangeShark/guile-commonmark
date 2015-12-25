@@ -6,3 +6,5 @@ before_install:
 install: true
 
 script: ./bootstrap && ./configure && make && make check
+
+after_failure: cat test-suite.log
