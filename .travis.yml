@@ -4,4 +4,4 @@ before_install:
 
 install: true
 
-script: ./bootstrap && ./configure && make && make check -d
+script: ./bootstrap && ./configure && make && make SHELL="/bin/bash -x" check
