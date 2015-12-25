@@ -4,4 +4,4 @@ before_install:
 
 install: true
 
-script: ./bootstrap && ./configure && make && make check
+script: ./bootstrap && ./configure && make && make check --debug=b
