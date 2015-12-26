@@ -20,6 +20,7 @@
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-26)
   #:export (make-node
+            node?
             node-type
             node-children
             node-data

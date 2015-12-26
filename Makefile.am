@@ -4,6 +4,7 @@ moddir=$(prefix)/share/guile/site/2.0
 godir=$(prefix)/share/guile/site/2.0
 
 SOURCES =                           \
+  commonmark/utils.scm              \
   commonmark/node.scm               \
   commonmark/blocks.scm             \
   commonmark/inlines.scm            \

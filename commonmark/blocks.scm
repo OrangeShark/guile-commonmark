@@ -19,6 +19,7 @@
   #:use-module (ice-9 regex)
   #:use-module (ice-9 rdelim)
   #:use-module (commonmark node)
+  #:use-module (commonmark utils)
   #:export (parse-blocks))
 
 ;; String -> String
@@ -250,6 +251,16 @@
 
 (define (make-paragraph line)
   (make-paragraph-node line))
+
+(define (parse-reference-definition n col)
+  (cond ((not (node? n)) (col n '()))
+        ((paragraph-node? n) (col n '(p)))
+        (else (map&co parse-reference-definition (node-children n)
+                      (lambda (v d)
+                        (col (make-node (node-type n)
+                                        (node-data n)
+                                        v)
+                             d))))))
 
 
 ;; Line is one of:
