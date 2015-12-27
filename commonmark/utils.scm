@@ -16,7 +16,10 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark utils)
-  #:export (map&co))
+  #:use-module (ice-9 rdelim)
+  #:export (map&co
+            expand-tabs
+            read-tabless-line))
 
 
 ;; f: (a k' -> d)
@@ -32,3 +35,31 @@
                    (map&co f (cdr l)
                            (lambda (v2 d2)
                              (k (cons v v2) (append d d2))))))))
+
+
+;; String -> String
+(define (expand-tabs line)
+  "Expands the tabs of the string line into spaces"
+  (list->string
+   (let loop ((l (string->list line)) (c 1))
+     (cond [(null? l) '()]
+           [(char=? #\tab (car l))
+            (if (= (remainder c 4) 0)
+                (cons #\space
+                      (loop (cdr l) (1+ c)))
+                (cons #\space
+                      (loop l (1+ c))))]
+           [else (cons (car l)
+                       (loop (cdr l) (1+ c)))]))))
+
+;; Line is one of:
+;;  - String
+;;  - eof-object
+
+;; Port -> Line
+(define (read-tabless-line p)
+  "read a line from port p and expands any tabs"
+  (let ((line (read-line p)))
+    (if (eof-object? line)
+        line
+        (expand-tabs line))))

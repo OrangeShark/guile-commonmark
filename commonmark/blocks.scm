@@ -17,25 +17,9 @@
 
 (define-module (commonmark blocks) 
   #:use-module (ice-9 regex)
-  #:use-module (ice-9 rdelim)
   #:use-module (commonmark node)
   #:use-module (commonmark utils)
   #:export (parse-blocks))
-
-;; String -> String
-;; Expands tabs in the string into spaces
-(define (expand-tabs line)
-  (list->string 
-   (let loop ((l (string->list line)) (c 1))
-     (cond [(null? l) '()]
-           [(char=? #\tab (car l))
-            (if (= (remainder c 4) 0)
-                (cons #\space
-                      (loop (cdr l) (1+ c)))
-                (cons #\space
-                      (loop l (1+ c))))]
-           [else (cons (car l)
-                       (loop (cdr l) (1+ c)))]))))
 
 (define re-hrule (make-regexp "^((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
@@ -46,6 +30,7 @@
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
 (define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)])( +|$)"))
+(define re-link-definition (make-regexp "^ {0,3}\\[( )\\]: *\n?"))
 
 
 (define (block-quote? l)
@@ -252,26 +237,12 @@
 (define (make-paragraph line)
   (make-paragraph-node line))
 
-(define (parse-reference-definition n col)
+(define (parse-reference-definitions n col)
   (cond ((not (node? n)) (col n '()))
         ((paragraph-node? n) (col n '(p)))
-        (else (map&co parse-reference-definition (node-children n)
+        (else (map&co parse-reference-definitions (node-children n)
                       (lambda (v d)
                         (col (make-node (node-type n)
                                         (node-data n)
                                         v)
                              d))))))
-
-
-;; Line is one of:
-;;  - String
-;;  - eof-object
-
-;; Port -> Line
-;; read a line from port p and expands any tabs
-(define (read-tabless-line p)
-  (let ((line (read-line p)))
-    (if (eof-object? line)
-        line 
-        (expand-tabs line))))
-
