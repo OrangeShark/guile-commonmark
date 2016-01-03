@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015, 2016  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -75,8 +75,8 @@
 
 ;; Node is (make-node Node-Type Node-Data (listof Node))
 ;; interp. a node to represent a CommonMark document
-(define* (make-node type #:optional data children)
-  (cons* type (or data '((closed . #f))) (or children '())))
+(define* (make-node type #:optional (data '((closed . #f))) (children '()))
+  (cons* type data children))
 
 (define (node? node)
   (pair? node))
