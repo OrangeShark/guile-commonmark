@@ -21,6 +21,19 @@
   #:use-module (commonmark utils)
   #:export (parse-blocks))
 
+;; ']' needs to be the first character after an openning '[' to be able
+;; to match ']'
+(define ascii-punctuation-characters "[]!\"#$%&'()*+,-./:;<=>?@[\\^_`{|}~]")
+(define escaped-characters (string-append "\\\\" ascii-punctuation-characters))
+(define regular-characters "[^\x01-\x19 ()\\\\]")
+(define link-label (string-append "\\[(([^][]|" 
+                                     escaped-characters 
+                                     "){1,1000})\\]"))
+(define link-destination (string-append "((" regular-characters "+|"
+                                        escaped-characters ")*)"))
+(define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
+                                  "'(" escaped-characters "|[^'])*'))"))
+
 (define re-hrule (make-regexp "^((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
 (define re-atx-header (make-regexp "^ {0,3}(#{1,6}) "))
@@ -30,7 +43,12 @@
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
 (define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)])( +|$)"))
-(define re-link-definition (make-regexp "^ {0,3}\\[( )\\]: *\n?"))
+(define re-link-definition (make-regexp (string-append "^ {0,3}" 
+                                                       link-label 
+                                                       ": *\n? *"
+                                                       link-destination
+                                                       " +\n? *"
+                                                       link-title)))
 
 
 (define (block-quote? l)
@@ -62,6 +80,9 @@
 
 (define (ordered-list-marker? line)
   (regexp-exec re-ordered-list-marker line))
+
+(define (link-definition? text)
+  (regexp-exec re-link-definition text))
 
 
 ;; Port -> Document
@@ -239,10 +260,22 @@
 
 (define (parse-reference-definitions n col)
   (cond ((not (node? n)) (col n '()))
-        ((paragraph-node? n) (col n '(p)))
+        ((paragraph-node? n) (parse-reference-definition n col))
         (else (map&co parse-reference-definitions (node-children n)
                       (lambda (v d)
                         (col (make-node (node-type n)
                                         (node-data n)
                                         v)
                              d))))))
+
+(define (parse-reference-definition n col)
+  (let loop ((text (node-children (last-child n)))
+             (links '()))
+    (cond ((link-definition? text) =>
+           (lambda (match)
+             (loop (match:suffix match)
+                   (cons (list (match:substring match 1)
+                               (match:substring match 3)
+                               (match:substring match 5))
+                         links))))
+          (else (col (make-paragraph text) links)))))
