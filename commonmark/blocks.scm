@@ -26,15 +26,15 @@
 (define ascii-punctuation-characters "[]!\"#$%&'()*+,-./:;<=>?@[\\^_`{|}~]")
 (define escaped-characters (string-append "\\\\" ascii-punctuation-characters))
 (define regular-characters "[^\x01-\x19 ()\\\\]")
-(define link-label (string-append "\\[(([^][]|" 
-                                     escaped-characters 
+(define link-label (string-append "\\[(([^][]|"
+                                     escaped-characters
                                      "){1,1000})\\]"))
 (define link-destination (string-append "((" regular-characters "+|"
                                         escaped-characters ")*)"))
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
                                   "'(" escaped-characters "|[^'])*'))"))
 
-(define re-hrule (make-regexp "^((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
+(define re-thematic-break (make-regexp "^ {0,3}((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
 (define re-atx-header (make-regexp "^ {0,3}(#{1,6}) "))
 (define re-indented-code-block (make-regexp "^    "))
@@ -43,8 +43,8 @@
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
 (define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)])( +|$)"))
-(define re-link-definition (make-regexp (string-append "^ {0,3}" 
-                                                       link-label 
+(define re-link-definition (make-regexp (string-append "^ {0,3}"
+                                                       link-label
                                                        ": *\n? *"
                                                        link-destination
                                                        " +\n? *"
@@ -63,8 +63,8 @@
 (define (empty-line? l)
   (regexp-exec re-empty-line l))
 
-(define (hrule? line)
-  (regexp-exec re-hrule line))
+(define (thematic-break? line)
+  (regexp-exec re-thematic-break line))
 
 (define (setext-header? line)
   (regexp-exec re-setext-header line))
@@ -206,7 +206,7 @@
 ;; String -> Node
 (define (parse-line l)
   (cond ((empty-line? l)          #f)
-        ((hrule? l)               (make-hrule))
+        ((thematic-break? l)         (make-thematic-break))
         ((block-quote? l)         => make-block-quote)
         ((atx-header? l)          => make-atx-header)
         ((code-block? l)          => make-code-block)
@@ -216,8 +216,8 @@
         (else                     (make-paragraph l))))
 
 
-(define (make-hrule)
-  (make-hrule-node))
+(define (make-thematic-break)
+  (make-thematic-break-node))
 
 (define (make-block-quote match)
   (make-block-quote-node (parse-line (match:suffix match))) )

@@ -30,8 +30,8 @@
             no-children?
             make-document-node
             document-node?
-            make-hrule-node
-            hrule-node?
+            make-thematic-break-node
+            thematic-break-node?
             make-paragraph-node
             paragraph-node?
             make-block-quote-node
@@ -61,7 +61,7 @@
 
 ;; Node-Type is one of:
 ;; - 'document
-;; - 'hrule
+;; - 'thematic-break
 ;; - 'paragraph
 ;; - 'block-quote
 ;; - 'code-block
@@ -121,14 +121,14 @@
 (define (document-node? n)
   (node-type? n 'document))
 
-;; Hrule node
-;; A hrule node represents a horizontal rule in a commonmark document
-(define (make-hrule-node)
-  (close-node (make-node 'hrule)))
+;; Thematic-Break node
+;; A thematic-break node represents a horizontal rule in a commonmark document
+(define (make-thematic-break-node)
+  (make-node 'thematic-break '((closed . #t))))
 
 ;; Node -> Boolean
-(define (hrule-node? n)
-  (node-type? n 'hrule))
+(define (thematic-break-node? n)
+  (node-type? n 'thematic-break))
 
 ;; Paragraph node
 ;; A paragraph node represents a paragraph in a commonmark document

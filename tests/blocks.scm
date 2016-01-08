@@ -17,6 +17,7 @@
 
 (define-module (test-blocks)
   #:use-module (srfi srfi-64)
+  #:use-module (ice-9 match)
   #:use-module (commonmark blocks))
 
 (test-begin "blocks")
@@ -38,22 +39,60 @@
                                   (text ((closed . #t)) "foo"))))
 
 (test-equal "parse-blocks, multiline paragraph"
-            (call-with-input-string "foo
-bar" parse-blocks)
+            (call-with-input-string "foo\nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo
-bar"))))
+                                  (text ((closed . #t)) "foo\nbar"))))
 
 ;; not fixed yet
 (test-expect-fail "parse-blocks, code block does not interrupt paragraph")
 (test-equal "parse-blocks, code block does not interrupt paragraph"
-            (call-with-input-string "foo
-     bar" parse-blocks)
+            (call-with-input-string "foo\nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo
-bar"))))
+                                  (text ((closed . #t)) "foo\nbar"))))
+
+(test-equal "parse-blocks, multiline paragraph preserves line ending spaces"
+            (call-with-input-string "foo   \nbar" parse-blocks)
+            '(document ((closed . #f))
+                       (paragraph ((closed . #f))
+                                  (text ((closed . #t)) "foo   \nbar"))))
+
+(test-equal "parse-blocks, thematic breaks with *"
+            (call-with-input-string "***\n **  * ** * ** * **" parse-blocks)
+            '(document ((closed . #f))
+                       (thematic-break ((closed . #t)))
+                       (thematic-break ((closed . #t)))))
+
+(test-equal "parse-blocks, thematic breaks with -"
+            (call-with-input-string "---\n - - -" parse-blocks)
+            '(document ((closed . #f))
+                       (thematic-break ((closed . #t)))
+                       (thematic-break ((closed . #t)))))
+
+(test-equal "parse-blocks, thematic breaks with _"
+            (call-with-input-string "___\n   _______________________  " parse-blocks)
+            '(document ((closed . #f))
+                       (thematic-break ((closed . #t)))
+                       (thematic-break ((closed . #t)))))
+
+(test-equal "parse-blocks, thematic breaks must not have other characters"
+            (call-with-input-string "---a---" parse-blocks)
+            '(document ((closed . #f))
+                       (paragraph ((closed . #f))
+                                  (text ((closed . #t)) "---a---"))))
+
+(test-assert "parse-blocks, thematic breaks can interupt a paragraph"
+             (match (call-with-input-string "Foo\n***\nbar" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data1
+                                      ('text text-data1 "bar"))
+                           ('thematic-break (('closed . #t)))
+                           ('paragraph para-data2
+                                      ('text text-data2 "Foo")))
+                #t)
+               (x (pk 'fail x #f))))
+
 
 (test-end)
 
