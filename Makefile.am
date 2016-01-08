@@ -12,7 +12,8 @@ SOURCES =                           \
   commonmark.scm
 
 TESTS =	                            \
-  tests/node.scm
+  tests/node.scm                    \
+  tests/blocks.scm
 
 TEST_EXTENSIONS = .scm
 

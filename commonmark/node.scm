@@ -75,8 +75,8 @@
 
 ;; Node is (make-node Node-Type Node-Data (listof Node))
 ;; interp. a node to represent a CommonMark document
-(define* (make-node type #:optional (data '((closed . #f))) (children '()))
-  (cons* type data children))
+(define* (make-node type #:optional data (children '()))
+  (cons* type (or data '((closed . #f))) children))
 
 (define (node? node)
   (pair? node))
@@ -211,14 +211,14 @@
 ;; Text node
 ;; String Boolean -> Node
 (define (make-text-node text)
-  (make-node 'text '((closed . #t)) (string-trim text)))
+  (make-node 'text '((closed . #t)) (list (string-trim text))))
 
 (define (join-text-nodes tn1 tn2)
   (make-node 'text
              '((closed . #t))
-             (string-append (node-children tn1)
-                            "\n"
-                            (node-children tn2))))
+             (list (string-append (last-child tn1)
+                                  "\n"
+                                  (last-child tn2)))))
 
 (define (text-node? n)
   (node-type? n 'text))
