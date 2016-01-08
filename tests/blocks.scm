@@ -93,6 +93,46 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(define (header-level header-data)
+  (assq-ref header-data 'level))
+
+(test-assert "parse-blocks, atx headings"
+             (match (call-with-input-string
+                     "# foo\n## foo\n### foo\n#### foo\n##### foo\n###### foo" parse-blocks)
+               (('document doc-data
+                           ('header header-data6
+                                    ('text text-data6 "foo"))
+                           ('header header-data5
+                                    ('text text-data5 "foo"))
+                           ('header header-data4
+                                    ('text text-data4 "foo"))
+                           ('header header-data3
+                                    ('text text-data3 "foo"))
+                           ('header header-data2
+                                    ('text text-data2 "foo"))
+                           ('header header-data1
+                                    ('text text-data1 "foo")))
+                (and (= (header-level header-data6) 6)
+                     (= (header-level header-data5) 5)
+                     (= (header-level header-data4) 4)
+                     (= (header-level header-data3) 3)
+                     (= (header-level header-data2) 2)
+                     (= (header-level header-data1) 1)))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings not more than 6 #"
+             (match (call-with-input-string "####### foo" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                      ('text text-data "####### foo"))))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings requires an empty space"
+             (match (call-with-input-string "#hashtag" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "#hashtag"))))
+               (x pk (pk 'fail x #f))))
 
 (test-end)
 
