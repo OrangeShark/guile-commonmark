@@ -93,45 +93,47 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(define (header-level header-data)
-  (assq-ref header-data 'level))
+(define (heading-level heading-data)
+  (assq-ref heading-data 'level))
 
 (test-assert "parse-blocks, atx headings"
              (match (call-with-input-string
                      "# foo\n## foo\n### foo\n#### foo\n##### foo\n###### foo" parse-blocks)
                (('document doc-data
-                           ('header header-data6
+                           ('heading heading-data6
                                     ('text text-data6 "foo"))
-                           ('header header-data5
+                           ('heading heading-data5
                                     ('text text-data5 "foo"))
-                           ('header header-data4
+                           ('heading heading-data4
                                     ('text text-data4 "foo"))
-                           ('header header-data3
+                           ('heading heading-data3
                                     ('text text-data3 "foo"))
-                           ('header header-data2
+                           ('heading heading-data2
                                     ('text text-data2 "foo"))
-                           ('header header-data1
+                           ('heading heading-data1
                                     ('text text-data1 "foo")))
-                (and (= (header-level header-data6) 6)
-                     (= (header-level header-data5) 5)
-                     (= (header-level header-data4) 4)
-                     (= (header-level header-data3) 3)
-                     (= (header-level header-data2) 2)
-                     (= (header-level header-data1) 1)))
+                (and (eq? (heading-level heading-data6) 6)
+                     (eq? (heading-level heading-data5) 5)
+                     (eq? (heading-level heading-data4) 4)
+                     (eq? (heading-level heading-data3) 3)
+                     (eq? (heading-level heading-data2) 2)
+                     (eq? (heading-level heading-data1) 1)))
                (x (pk 'fail x #f))))
 
 (test-assert "parse-blocks, atx headings not more than 6 #"
              (match (call-with-input-string "####### foo" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                      ('text text-data "####### foo"))))
+                                      ('text text-data "####### foo")))
+                #t)
                (x (pk 'fail x #f))))
 
 (test-assert "parse-blocks, atx headings requires an empty space"
              (match (call-with-input-string "#hashtag" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "#hashtag"))))
+                                       ('text text-data "#hashtag")))
+                #t)
                (x (pk 'fail x #f))))
 
 (test-end)

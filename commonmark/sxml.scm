@@ -35,18 +35,18 @@
       (error "not a document node")))
 
 (define (node->sxml n)
-  (cond ((hrule-node? n) (hrule-node->sxml n))
+  (cond ((thematic-break-node? n) (thematic-break-node->sxml n))
         ((paragraph-node? n) (paragraph-node->sxml n))
         ((block-quote-node? n) (block-quote-node->sxml n))
         ((code-block-node? n) (code-block-node->sxml n))
         ((fenced-code-node? n) (fenced-code-node->sxml n))
-        ((header-node? n) (header-node->sxml n))
+        ((heading-node? n) (heading-node->sxml n))
         ((list-node? n) (list-node->sxml n))
         ((text-node? n) (text-node->sxml n))
         ((softbreak-node? n) (softbreak-node->sxml n))
         (else (error "unknown node"))))
 
-(define (hrule-node->sxml n)
+(define (thematic-break-node->sxml n)
   '(hr))
 
 (define (paragraph-node->sxml n)
@@ -64,7 +64,7 @@
 (define (fenced-code-node->sxml n)
   `(pre (code ,(infostring (assq-ref (node-data n) 'info-string)),@(node-children n))))
 
-(define (header-node->sxml n)
+(define (heading-node->sxml n)
   `(,(level n) ,@(fold-nodes node->sxml (node-children n))))
 
 (define (list-type n)

@@ -36,9 +36,9 @@
 
 (define re-thematic-break (make-regexp "^ {0,3}((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
-(define re-atx-header (make-regexp "^ {0,3}(#{1,6}) "))
+(define re-atx-heading (make-regexp "^ {0,3}(#{1,6}) "))
 (define re-indented-code-block (make-regexp "^    "))
-(define re-setext-header (make-regexp "^ {0,3}(=+|-+) *$"))
+(define re-setext-heading (make-regexp "^ {0,3}(=+|-+) *$"))
 (define re-empty-line (make-regexp "^ *$"))
 (define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
@@ -54,8 +54,8 @@
 (define (block-quote? l)
   (regexp-exec re-block-quote l))
 
-(define (atx-header? l)
-  (regexp-exec re-atx-header l))
+(define (atx-heading? l)
+  (regexp-exec re-atx-heading l))
 
 (define (code-block? l)
   (regexp-exec re-indented-code-block l))
@@ -66,8 +66,8 @@
 (define (thematic-break? line)
   (regexp-exec re-thematic-break line))
 
-(define (setext-header? line)
-  (regexp-exec re-setext-header line))
+(define (setext-heading? line)
+  (regexp-exec re-setext-heading line))
 
 (define (fenced-code? line)
   (regexp-exec re-fenced-code line))
@@ -123,8 +123,8 @@
   (let ((parsed-line (parse-line l)))
     (cond ((not parsed-line)
            (close-node n))
-          ((and (setext-header? l) (= (length (node-children n)) 1))
-           (make-header-node (node-children (last-child n))
+          ((and (setext-heading? l) (= (length (node-children n)) 1))
+           (make-heading-node (node-children (last-child n))
                              (if (string-any #\= l)
                                  1
                                  2)))
@@ -195,12 +195,12 @@
                 (cond ((and (not (empty-line? l))
                             (node-closed? new-child)
                             (not (fenced-code-node? new-child))
-                            (not (header-node? new-child)))
+                            (not (heading-node? new-child)))
                        (add-child-node (replace-last-child n new-child)
                                        (parse-line l)))
                       (else (replace-last-child n new-child)))))))
 
-(define (header-level s)
+(define (heading-level s)
   (string-length s))
 
 ;; String -> Node
@@ -208,7 +208,7 @@
   (cond ((empty-line? l)          #f)
         ((thematic-break? l)         (make-thematic-break))
         ((block-quote? l)         => make-block-quote)
-        ((atx-header? l)          => make-atx-header)
+        ((atx-heading? l)          => make-atx-heading)
         ((code-block? l)          => make-code-block)
         ((fenced-code? l)         => make-fenced-code)
         ((bullet-list-marker? l)  => make-bullet-list-marker)
@@ -222,9 +222,9 @@
 (define (make-block-quote match)
   (make-block-quote-node (parse-line (match:suffix match))) )
 
-(define (make-atx-header match)
-  (make-header-node (match:suffix match)
-                    (header-level (match:substring match 1))))
+(define (make-atx-heading match)
+  (make-heading-node (match:suffix match)
+                    (heading-level (match:substring match 1))))
 
 (define (make-code-block match)
   (make-code-block-node (match:suffix match)))

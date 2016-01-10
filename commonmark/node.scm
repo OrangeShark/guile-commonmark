@@ -44,8 +44,8 @@
             list-node?
             make-item-node
             item-node?
-            make-header-node
-            header-node?
+            make-heading-node
+            heading-node?
             make-text-node
             join-text-nodes
             text-node?
@@ -68,7 +68,7 @@
 ;; - 'fenced-code
 ;; - 'list
 ;; - 'item
-;; - 'header
+;; - 'heading
 ;; - 'text
 ;; - 'softbreak
 ;; interp. The type of CommonMark block node
@@ -195,18 +195,18 @@
 
 
 ;; Level is an Integer [1-6]
-;; Header node
-;; represents either a atx header or setext header
+;; Heading node
+;; represents either a atx heading or setext heading
 ;; String Level -> Node
-(define (make-header-node text level)
-  (make-node 'header
+(define (make-heading-node text level)
+  (make-node 'heading
              `((level . ,level)
                (closed . #t))
              (list (make-text-node text)) ))
 
 ;; Node -> Boolean
-(define (header-node? n)
-  (node-type? n 'header))
+(define (heading-node? n)
+  (node-type? n 'heading))
 
 ;; Text node
 ;; String Boolean -> Node
