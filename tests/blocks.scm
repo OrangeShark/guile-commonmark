@@ -132,7 +132,7 @@
                (('document doc-data
                            ('paragraph para-data
                                        ('text text-data "#hashtag"))))
-               (x pk (pk 'fail x #f))))
+               (x (pk 'fail x #f))))
 
 (test-end)
 
