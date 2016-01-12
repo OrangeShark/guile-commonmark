@@ -136,6 +136,57 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(test-expect-fail 2)
+(test-assert "parse-blocks, atx headings closing # characters are optional"
+             (match (call-with-input-string "## foo ##\n  ###   bar    ###" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data1
+                                     ('text text-data1 "bar"))
+                           ('heading heading-data2
+                                     ('text text-data2 "foo")))
+                (and (eq? (heading-level heading-data1) 3)
+                     (eq? (heading-level heading-data2) 2)))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings spaces are allowed after closing sequence"
+             (match (call-with-input-string "### foo ###     " parse-blocks)
+               (('document doc-data
+                           ('heading heading-data
+                                     ('text text-data "foo")))
+                (eq? (heading-level heading-data) 3))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings nonspace character after closing sequence"
+             (match (call-with-input-string "### foo ### b" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data
+                                     ('text text-data "foo ### b")))
+                (eq? (heading-level heading-data) 3))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings closing sequence must be preceded by a space"
+             (match (call-with-input-string "# foo#" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data
+                                     ('text text-data "foo#")))
+                (eq? (heading-level heading-data) 1))
+               (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-blocks, atx headings can be empty"
+             (match (call-with-input-string "## \n#\n### ###" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data1
+                                     ('text text-data1 ""))
+                           ('heading heading-data2
+                                     ('text text-data2 ""))
+                           ('heading heading-data3
+                                     ('text text-data3 "")))
+                (and (eq? (heading-level heading-data1) 3)
+                     (eq? (heading-level heading-data2) 1)
+                     (eq? (heading-level heading-data3) 2)))
+               (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
