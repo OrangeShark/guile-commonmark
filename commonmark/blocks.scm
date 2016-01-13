@@ -117,17 +117,16 @@
                                                   (string-append (last-child n)
                                                                  "\n"
                                                                  (match:suffix rest-line)))))
+        ((empty-line? l) (replace-last-child n (string-append (last-child n) "\n")))
         (else (close-node n))))
 
 (define (parse-paragraph n l)
   (let ((parsed-line (parse-line l)))
     (cond ((not parsed-line)
            (close-node n))
-          ((and (setext-heading? l) (= (length (node-children n)) 1))
-           (make-heading-node (node-children (last-child n))
-                             (if (string-any #\= l)
-                                 1
-                                 2)))
+          ((and (setext-heading? l) (= (length (node-children (last-child n))) 1))
+           (make-heading-node (last-child (last-child n))
+                              (if (string-any #\= l) 1 2)))
           ((paragraph-node? parsed-line)
            (replace-last-child n (join-text-nodes (last-child n) (last-child parsed-line))))
           (else (close-node n)))))

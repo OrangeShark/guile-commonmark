@@ -216,9 +216,7 @@
 (define (join-text-nodes tn1 tn2)
   (make-node 'text
              '((closed . #t))
-             (list (string-append (last-child tn1)
-                                  "\n"
-                                  (last-child tn2)))))
+             (append (node-children tn2) (node-children tn1))))
 
 (define (text-node? n)
   (node-type? n 'text))

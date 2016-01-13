@@ -42,7 +42,7 @@
             (call-with-input-string "foo\nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo\nbar"))))
+                                  (text ((closed . #t)) "bar" "foo"))))
 
 ;; not fixed yet
 (test-expect-fail "parse-blocks, code block does not interrupt paragraph")
@@ -56,7 +56,7 @@
             (call-with-input-string "foo   \nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo   \nbar"))))
+                                  (text ((closed . #t)) "bar" "foo   "))))
 
 (test-equal "parse-blocks, thematic breaks with *"
             (call-with-input-string "***\n **  * ** * ** * **" parse-blocks)
@@ -185,6 +185,72 @@
                 (and (eq? (heading-level heading-data1) 3)
                      (eq? (heading-level heading-data2) 1)
                      (eq? (heading-level heading-data3) 2)))
+               (x (pk 'fail x #f))))
+
+
+(test-assert "parse-blocks, setext headings"
+             (match (call-with-input-string "Foo\n-------------------------\n\nBar\n=" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data1
+                                     ('text text-data1 "Bar"))
+                           ('heading heading-data2
+                                     ('text text-data2 "Foo")))
+                (and (eq? (heading-level heading-data1) 1)
+                     (eq? (heading-level heading-data2) 2)))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, setext headings up to three space indents"
+             (match (call-with-input-string
+                     "   Foo\n---\n\n  Foo\n-----\n\n  Foo\n  ===" parse-blocks)
+               (('document doc-data
+                           ('heading heading-data1
+                                     ('text text-data1 "Foo"))
+                           ('heading heading-data2
+                                     ('text text-data2 "Foo"))
+                           ('heading heading-data3
+                                     ('text text-data3 "Foo")))
+                (and (eq? (heading-level heading-data1) 1)
+                     (eq? (heading-level heading-data2) 2)
+                     (eq? (heading-level heading-data3) 2)))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, setext headings four space indents too much"
+             (match (call-with-input-string
+                     "    Foo\n    ---\n\n    Foo\n---" parse-blocks)
+               (('document doc-data
+                           ('thematic-break break-data)
+                           ('code-block code-data "Foo\n---\n\nFoo"))
+                #t)
+               (x (pk 'fail x #f))))
+
+
+(test-expect-fail 1)
+(test-assert "parse-blocks, setext headings four space indent underline too much"
+             (match (call-with-input-string "Foo\n    ---" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "Foo\n---")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, setext headings underline cannot contain interal spaces"
+             (match (call-with-input-string "Foo\n= =\n\nFoo\n--- -" parse-blocks)
+               (('document doc-data
+                           ('thematic-break break-data)
+                           ('paragraph para-data1
+                                       ('text text-data1 "Foo"))
+                           ('paragraph para-data2
+                                       ('text text-data2 "= =" "Foo")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, setext heading cannot interrupt a paragraph"
+             (match (call-with-input-string "Foo\nBar\n---" parse-blocks)
+               (('document doc-data
+                           ('thematic-break break-data)
+                           ('paragraph para-data
+                                       ('text text-data "Bar" "Foo")))
+                #t)
                (x (pk 'fail x #f))))
 
 (test-end)
