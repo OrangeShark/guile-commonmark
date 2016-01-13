@@ -129,6 +129,8 @@
                               (if (string-any #\= l) 1 2)))
           ((paragraph-node? parsed-line)
            (replace-last-child n (join-text-nodes (last-child n) (last-child parsed-line))))
+          ((code-block-node? parsed-line)
+           (replace-last-child n (add-text (last-child n) l)))
           (else (close-node n)))))
 
 (define (parse-fenced-code n l)

@@ -48,6 +48,7 @@
             heading-node?
             make-text-node
             join-text-nodes
+            add-text
             text-node?
             make-softbreak-node
             softbreak-node?
@@ -217,6 +218,11 @@
   (make-node 'text
              '((closed . #t))
              (append (node-children tn2) (node-children tn1))))
+
+(define (add-text tn text)
+  (make-node 'text
+             '((closed . #t))
+             (cons (string-trim text) (node-children tn))))
 
 (define (text-node? n)
   (node-type? n 'text))

@@ -44,13 +44,13 @@
                        (paragraph ((closed . #f))
                                   (text ((closed . #t)) "bar" "foo"))))
 
-;; not fixed yet
-(test-expect-fail "parse-blocks, code block does not interrupt paragraph")
-(test-equal "parse-blocks, code block does not interrupt paragraph"
-            (call-with-input-string "foo\nbar" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo\nbar"))))
+(test-assert "parse-blocks, code block does not interrupt paragraph"
+             (match (call-with-input-string "foo\n    bar" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "bar" "foo")))
+                #t)
+               (x (pk 'fail x #f))))
 
 (test-equal "parse-blocks, multiline paragraph preserves line ending spaces"
             (call-with-input-string "foo   \nbar" parse-blocks)
