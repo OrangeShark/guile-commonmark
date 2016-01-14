@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015, 2016  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -191,7 +191,7 @@
 ;; Node String -> Node
 (define (parse-container-block n l)
   (cond ((or (no-children? n) (and (node-closed? (last-child n)) (not (empty-line? l))))
-         (add-child-node n (parse-line l)))
+         (if (empty-line? l) n (add-child-node n (parse-line l))))
         (else (let ((new-child (parse-open-block (last-child n) l)))
                 (cond ((and (not (empty-line? l))
                             (node-closed? new-child)
