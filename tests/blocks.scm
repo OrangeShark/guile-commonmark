@@ -32,11 +32,21 @@
                        (paragraph ((closed . #f))
                                   (text ((closed . #t)) "foo"))))
 
-(test-equal "parse-blocks, three space simple paragraph"
-            (call-with-input-string "   foo" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo"))))
+(test-assert "parse-blocks, paragraph leading spaces skipped"
+             (match (call-with-input-string "  aaa\n bbb" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "bbb" "aaa")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, paragraph lines after first may ident any ammount"
+             (match (call-with-input-string "aaa\n          bbb\n                    ccc" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "ccc" "bbb" "aaa")))
+                #t)
+               (x (pk 'fail x #f))))
 
 (test-equal "parse-blocks, multiline paragraph"
             (call-with-input-string "foo\nbar" parse-blocks)
@@ -57,6 +67,16 @@
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
                                   (text ((closed . #t)) "bar" "foo   "))))
+
+(test-assert "parse-blocks, paragraph multiple blank lines have no affect"
+            (match (call-with-input-string "aaa\n\nbbb" parse-blocks)
+              (('document doc-data
+                          ('paragraph para-data1
+                                      ('text text-data1 "bbb"))
+                          ('paragraph para-data2
+                                      ('text text-data2 "aaa")))
+               #t)
+              (x (pk 'fail x #f))))
 
 (test-equal "parse-blocks, thematic breaks with *"
             (call-with-input-string "***\n **  * ** * ** * **" parse-blocks)
