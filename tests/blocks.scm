@@ -16,6 +16,8 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (test-blocks)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-64)
   #:use-module (ice-9 match)
   #:use-module (commonmark blocks))
@@ -36,7 +38,7 @@
              (match (call-with-input-string "  aaa\n bbb" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "bbb" "aaa")))
+                                       ('text text-data "aaa\nbbb")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -44,7 +46,7 @@
              (match (call-with-input-string "aaa\n          bbb\n                    ccc" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "ccc" "bbb" "aaa")))
+                                       ('text text-data "aaa\nbbb\nccc")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -52,13 +54,13 @@
             (call-with-input-string "foo\nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "bar" "foo"))))
+                                  (text ((closed . #t)) "foo\nbar"))))
 
 (test-assert "parse-blocks, code block does not interrupt paragraph"
              (match (call-with-input-string "foo\n    bar" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "bar" "foo")))
+                                       ('text text-data "foo\nbar")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -66,7 +68,7 @@
             (call-with-input-string "foo   \nbar" parse-blocks)
             '(document ((closed . #f))
                        (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "bar" "foo   "))))
+                                  (text ((closed . #t)) "foo   \nbar"))))
 
 (test-assert "parse-blocks, paragraph multiple blank lines have no affect"
             (match (call-with-input-string "aaa\n\nbbb" parse-blocks)
@@ -260,7 +262,7 @@
                            ('paragraph para-data1
                                        ('text text-data1 "Foo"))
                            ('paragraph para-data2
-                                       ('text text-data2 "= =" "Foo")))
+                                       ('text text-data2 "Foo\n= =")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -269,7 +271,7 @@
                (('document doc-data
                            ('thematic-break break-data)
                            ('paragraph para-data
-                                       ('text text-data "Bar" "Foo")))
+                                       ('text text-data "Foo\nBar")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -453,7 +455,7 @@
              (match (call-with-input-string "``` ```\naaa" parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "aaa" "``` ```")))
+                                       ('text text-data "``` ```\naaa")))
                 #t)
                (x (pk 'fail x #f))))
 
@@ -502,6 +504,19 @@
                (('document doc-data
                            ('fenced-code code-data "``` aaa"))
                 (not (equal? (info-string code-data) "aaa")))
+               (x (pk 'fail x #f))))
+
+(define (link-references data)
+  (assq-ref data 'link-references))
+
+(test-assert "parse-blocks, link reference definition simple"
+             (match (call-with-input-string "[foo]: /url \"title\"\n\n[foo]" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data1
+                                       ('text text-data1 "[foo]"))
+                           ('paragraph para-data2
+                                       ('text text-data2 "")))
+                (any (cut equal? '("foo" "/url" "\"title\"")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
 (test-end)

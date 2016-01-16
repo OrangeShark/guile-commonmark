@@ -16,6 +16,8 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark blocks) 
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
   #:use-module (ice-9 regex)
   #:use-module (commonmark node)
   #:use-module (commonmark utils)
@@ -92,7 +94,10 @@
   (let loop ((root (make-document-node))
              (line (read-tabless-line p)))
     (if (eof-object? line)
-        root 
+        (parse-reference-definitions root (lambda (doc references)
+                                            (if (null? references)
+                                                doc
+                                                (node-add-data doc 'link-references references))))
         (loop (parse-open-block root line)
               (read-tabless-line p)))))
 
@@ -269,8 +274,11 @@
                                         v)
                              d))))))
 
+(define (reverse-join ls)
+  (reduce (cut string-append <> "\n" <>) "" ls))
+
 (define (parse-reference-definition n col)
-  (let loop ((text (node-children (last-child n)))
+  (let loop ((text (reverse-join (node-children (last-child n))))
              (links '()))
     (cond ((link-definition? text) =>
            (lambda (match)
