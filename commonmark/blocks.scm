@@ -32,7 +32,7 @@
                                      escaped-characters
                                      "){1,1000})\\]"))
 (define link-destination (string-append "((" regular-characters "+|"
-                                        escaped-characters ")*)"))
+                                        escaped-characters ")+)"))
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
                                   "'(" escaped-characters "|[^'])*'))"))
 
@@ -49,8 +49,9 @@
                                                        link-label
                                                        ": *\n? *"
                                                        link-destination
-                                                       " +\n? *"
-                                                       link-title)))
+                                                       "( +| *\n? *)"
+                                                       link-title
+                                                       "? *(\n|$)")))
 
 
 (define (block-quote? l)
@@ -285,6 +286,6 @@
              (loop (match:suffix match)
                    (cons (list (match:substring match 1)
                                (match:substring match 3)
-                               (match:substring match 5))
+                               (match:substring match 6))
                          links))))
           (else (col (make-paragraph text) links)))))
