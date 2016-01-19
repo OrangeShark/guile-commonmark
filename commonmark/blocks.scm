@@ -242,13 +242,13 @@
      (info-string . ,(string-trim-both (match:substring match 2))))))
 
 (define (make-bullet-list-marker match)
-  (make-list-node (make-item (match:suffix match) 1 (match:substring match 2))
+  (make-list-node (make-item (match:suffix match) (match:end match 1) (match:substring match 2))
                   `((type . bullet)
                     (tight . #t)
                     (bullet . ,(match:substring match 1)))))
 
 (define (make-ordered-list-marker match)
-  (make-list-node (make-item (match:suffix match) 2 (match:substring match 3))
+  (make-list-node (make-item (match:suffix match) (match:end match 2) (match:substring match 3))
                   `((type . ordered)
                     (start . ,(string->number (match:substring match 1)))
                     (tight . #t)

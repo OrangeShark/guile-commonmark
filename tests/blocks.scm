@@ -922,7 +922,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, list item content must be indented enough to be part of the item"
              (match (call-with-input-string
                      " -    one\n\n     two"
