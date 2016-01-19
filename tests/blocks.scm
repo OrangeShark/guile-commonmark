@@ -878,6 +878,294 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(test-assert "parse-blocks, list item base case"
+             (match (call-with-input-string
+                     "1.  A paragraph\n    with two lines.\n\n        indented code\n\n    > A block quote."
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "A block quote.")))
+                                         ('code-block code-data "indented code")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item"
+             (match (call-with-input-string
+                     "- one\n\n two"
+                     parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data1
+                                       ('text text-data1 "two"))
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "one")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item"
+             (match (call-with-input-string
+                     "- one\n\n  two"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "two"))
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "one")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item"
+             (match (call-with-input-string
+                     " -    one\n\n     two"
+                     parse-blocks)
+               (('document doc-data
+                           ('code-block code-data " two")
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data
+                                                     ('text text-data "one")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item"
+             (match (call-with-input-string
+                     " -    one\n\n      two"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "two"))
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "one")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item not column"
+             (match (call-with-input-string
+                     "   > > 1.  one\n>>\n>>     two"
+                     parse-blocks)
+               (('document doc-data
+                           ('block-quote quote-data1
+                                         ('block-quote quote-data2
+                                                       ('list list-data
+                                                              ('item item-data
+                                                                     ('paragraph para-data1
+                                                                                 ('text text-data1 "two"))
+                                                                     ('paragraph para-data2
+                                                                                 ('text text-data2 "one")))))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item content must be indented enough to be part of the item not column"
+             (match (call-with-input-string
+                     ">>- one\n>>\n  >  > two"
+                     parse-blocks)
+               (('document doc-data
+                           ('block-quote quote-data1
+                                         ('block-quote quote-data2
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "two"))
+                                                       ('list list-data
+                                                              ('item item-data
+                                                                     ('paragraph para-data2
+                                                                                 ('text text-data2 "one")))))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item needs one space after the list marker"
+             (match (call-with-input-string
+                     "-one\n\n2.two"
+                     parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data1
+                                       ('text text-data1 "2.two"))
+                           ('paragraph para-data2
+                                       ('text text-data2 "-one")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-expect-fail 3)
+(test-assert "parse-blocks, list item may not contain blocks with more than one blank line except fenced code block"
+             (match (call-with-input-string
+                     "- foo
+
+  bar
+
+- foo
+
+
+  bar
+
+- ```
+  foo
+
+
+  bar
+  ```
+
+- baz
+
+  + ```
+    foo
+
+
+    bar
+    ```"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data2
+                                  ('item item-data4
+                                         ('list list-data3
+                                                ('item item-data5
+                                                       ('fenced-code code-data2 "foo\n\n\nbar")))
+                                         ('paragraph para-data5
+                                                     ('text text-data5 "baz")))
+                                  ('item item-data3
+                                         ('fenced-code code-data1 "foo\n\n\nbar")))
+                           ('paragraph para-data4
+                                       ('text text-data4 "bar"))
+                           ('list list-data1
+                                  ('item item-data1
+                                         ('paragraph para-data3
+                                                     ('text text-data3 "foo")))
+                                  ('item item-data2
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "bar"))
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item may contain any kind of block"
+             (match (call-with-input-string
+                     "1.  foo
+
+    ```
+    bar
+    ```
+
+    baz
+
+    > bam"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data3
+                                                                   ('text text-data3 "bam")))
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "baz"))
+                                         ('fenced-code code-data "bar")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item contain indented code blocks that preserve empty lines"
+             (match (call-with-input-string
+                     "- foo
+
+      bar
+
+      baz"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data "bar\n\nbaz")
+                                         ('paragraph para-data
+                                                     ('text text-data "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item contain indented code blocks that preserve empty lines unless two blank lines"
+             (match (call-with-input-string
+                     "- foo
+
+      bar
+
+
+      baz"
+                     parse-blocks)
+               (('document doc-data
+                           (code-block code-data1 "  baz")
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data2 "bar")
+                                         ('paragraph para-data
+                                                     ('text text-data "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(define (list-start data)
+  (assq-ref data 'start))
+
+(test-assert "parse-blocks, list item start numbers must be nine digits or less"
+             (match (call-with-input-string
+                     "123456789. ok"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data
+                                                     ('text text-data "ok")))))
+                (equal? (list-start list-data) 123456789))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item start numbers must be nine digits or less"
+             (match (call-with-input-string
+                     "1234567890. not ok"
+                     parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "1234567890. not ok")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item may begin with 0s"
+             (match (call-with-input-string
+                     "0. ok"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data
+                                                     ('text text-data "ok")))))
+                (equal? (list-start list-data) 0))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item may begin with 0s"
+             (match (call-with-input-string
+                     "003. ok"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data
+                                                     ('text text-data "ok")))))
+                (equal? (list-start list-data) 3))
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item number may not be negative"
+             (match (call-with-input-string
+                     "-1. not ok"
+                     parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "-1. not ok")))
+                #t)
+               (x (pk 'fail x #f))))
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
