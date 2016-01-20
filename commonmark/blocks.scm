@@ -182,7 +182,10 @@
 
 (define (parse-item n l)
   (let ((padding (node-get-data n 'padding)))
-    (cond ((and (not (no-children? n))
+    (cond ((and (no-children? n)
+                (empty-line? l))
+           (close-node n))
+          ((and (not (no-children? n))
                 (node-closed? (last-child n))
                 (empty-line? l))
            (close-node n))
@@ -192,6 +195,8 @@
                (replace-last-child n (close-node (last-child n)))))
           ((n-spaces? padding l)
            (parse-container-block n (substring l padding)))
+          ((no-children? n)
+           (close-node n))
           (else (close-node (replace-last-child n (close-node (last-child n))))))))
 
 ;; Node String -> Node

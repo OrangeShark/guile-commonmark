@@ -1165,6 +1165,174 @@
                                        ('text text-data "-1. not ok")))
                 #t)
                (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item code block must be indented four spaces beyond the edge"
+             (match (call-with-input-string
+                     (string-append "- foo\n"
+                                    "\n"
+                                    "      bar")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data "bar")
+                                         ('paragraph para-data
+                                                     ('text text-data "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item code block must be indented four spaces beyond the edge"
+             (match (call-with-input-string
+                     (string-append "  10.  foo\n"
+                                    "\n"
+                                    "           bar")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data "bar")
+                                         ('paragraph para-data
+                                                     ('text text-data "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item if code block is first block, contents must be indented one space after"
+             (match (call-with-input-string
+                     (string-append "1.     indented code\n"
+                                    "\n"
+                                    "   paragraph\n"
+                                    "\n"
+                                    "       more code")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data1 "more code")
+                                         ('paragraph para-data
+                                                     ('text text-data "paragraph"))
+                                         ('code-block code-data2 "indented code"))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item if code block is first block, additional space inside code block"
+             (match (call-with-input-string
+                     (string-append "1.      indented code\n"
+                                    "\n"
+                                    "   paragraph\n"
+                                    "\n"
+                                    "       more code")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('code-block code-data1 "more code")
+                                         ('paragraph para-data
+                                                     ('text text-data "paragraph"))
+                                         ('code-block code-data2 " indented code"))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item can start with a blank line"
+             (match (call-with-input-string
+                     (string-append "-\n"
+                                    "  foo\n"
+                                    "-\n"
+                                    "  ```\n"
+                                    "  bar\n"
+                                    "  ```\n"
+                                    "-\n"
+                                    "      baz")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data1
+                                         ('code-block code-data1 "baz"))
+                                  ('item item-data2
+                                         ('fenced-code code-data2 "bar"))
+                                  ('item item-data3
+                                         ('paragraph para-data
+                                                     ('text text-data "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item can begin with at most one blank line"
+             (match (call-with-input-string
+                     (string-append "-\n"
+                                    "\n"
+                                    "  foo")
+                     parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "foo"))
+                           ('list list-data
+                                  ('item item-data)))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item empty bullet list item"
+             (match (call-with-input-string
+                     (string-append "- foo\n"
+                                    "-\n"
+                                    "- bar")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data1
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "bar")))
+                                  ('item item-data2)
+                                  ('item item-data3
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item empty bullet list item space does not matter after list marker"
+             (match (call-with-input-string
+                     (string-append "- foo\n"
+                                    "-   \n"
+                                    "- bar")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data1
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "bar")))
+                                  ('item item-data2)
+                                  ('item item-data3
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item empty ordered list item"
+             (match (call-with-input-string
+                      (string-append "1. foo\n"
+                                     "2.\n"
+                                     "3. bar")
+                      parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data1
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "bar")))
+                                  ('item item-data2)
+                                  ('item item-data3
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list may start or end with an empty list item"
+             (match (call-with-input-string
+                     "*"
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data)))
+                #t)
+               (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
