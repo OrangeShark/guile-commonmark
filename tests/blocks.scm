@@ -1333,6 +1333,279 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(test-assert "parse-blocks, list item indented one space"
+             (match (call-with-input-string
+                     (string-append " 1.  A paragraph\n"
+                                    "     with two lines.\n"
+                                    "\n"
+                                    "         indented code\n"
+                                    "\n"
+                                    "     > A block quote.")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "A block quote.")))
+                                         ('code-block code-data "indented code")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+
+(test-assert "parse-blocks, list item indented two spaces"
+             (match (call-with-input-string
+                     (string-append "  1.  A paragraph\n"
+                                    "      with two lines.\n"
+                                    "\n"
+                                    "          indented code\n"
+                                    "\n"
+                                    "      > A block quote.")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "A block quote.")))
+                                         ('code-block code-data "indented code")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item indented three spaces"
+             (match (call-with-input-string
+                     (string-append "   1.  A paragraph\n"
+                                    "       with two lines.\n"
+                                    "\n"
+                                    "           indented code\n"
+                                    "\n"
+                                    "       > A block quote.")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "A block quote.")))
+                                         ('code-block code-data "indented code")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item indented four spaces gives a code block"
+             (match (call-with-input-string
+                     (string-append "    1.  A paragraph\n"
+                                    "        with two lines.\n"
+                                    "\n"
+                                    "            indented code\n"
+                                    "\n"
+                                    "        > A block quote.")
+                     parse-blocks)
+               (('document doc-data
+                           ('code-block code-data
+                                        "1.  A paragraph\n    with two lines.\n\n        indented code\n\n    > A block quote."))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-expect-fail 4)
+(test-assert "parse-blocks, list item lazy continuation lines"
+             (match (call-with-input-string
+                     (string-append "  1.  A paragraph\n"
+                                    "with two lines.\n"
+                                    "\n"
+                                    "          indented code\n"
+                                    "\n"
+                                    "      > A block quote.")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('block-quote quote-data
+                                                       ('paragraph para-data1
+                                                                   ('text text-data1 "A block quote.")))
+                                         ('code-block code-data "indented code")
+                                         ('paragraph para-data2
+                                                     ('text text-data2 "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item lazy continuation lines with partial indentation"
+             (match (call-with-input-string
+                     (string-append "  1.  A paragraph\n"
+                                    "    with two lines.")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data
+                                  ('item item-data
+                                         ('paragraph para-data
+                                                     ('text text-data "A paragraph\nwith two lines.")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item lazy continuation in nested structures"
+             (match (call-with-input-string
+                     (string-append "> 1. > Blockquote\n"
+                                    "continued here.")
+                     parse-blocks)
+               (('document doc-data
+                           ('block-quote quote-data1
+                                         ('list list-data
+                                                ('item item-data
+                                                       ('block-quote quote-data2
+                                                                     ('paragraph para-data
+                                                                                 ('text text-data "Blockquote\ncontinued here.")))))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item lazy continuation in nested structures"
+             (match (call-with-input-string
+                     (string-append "> 1. > Blockquote\n"
+                                    "> continued here.")
+                     parse-blocks)
+               (('document doc-data
+                           ('block-quote quote-data1
+                                         ('list list-data
+                                                ('item item-data
+                                                       ('block-quote quote-data2
+                                                                     ('paragraph para-data
+                                                                                 ('text text-data "Blockquote\ncontinued here.")))))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item with sublists need to be indented"
+             (match (call-with-input-string
+                     (string-append "- foo\n"
+                                    "  - bar\n"
+                                    "    - baz")
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data1
+                                  ('item item-data1
+                                         ('list list-data2
+                                                ('item item-data2
+                                                       ('list list-data3
+                                                              ('item item-data3
+                                                                     ('paragraph para-data3
+                                                                                 ('text text-data3 "baz"))))
+                                                       ('paragraph para-data2
+                                                                   ('text text-data2 "bar"))
+                                                      ))
+                                         ('paragraph para-data1
+                                                     ('text text-data1 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item with sublists need to be indented, one is not enough"
+             (match (call-with-input-string
+                     (string-append "- foo\n"
+                                    " - bar\n"
+                                    "  - baz")
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data1
+                                   ('item item-data1
+                                          ('paragraph para-data1
+                                                      ('text text-data1 "baz")))
+                                   ('item item-data2
+                                          ('paragraph para-data2
+                                                      ('text text-data2 "bar")))
+                                   ('item item-data3
+                                          ('paragraph para-data3
+                                                      ('text text-data3 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item with sublists need to be indented, need four here"
+             (match (call-with-input-string
+                     (string-append "10) foo\n"
+                                    "    - bar")
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data1
+                                   ('item item-data1
+                                          ('list list-data2
+                                                 ('item item-data2
+                                                        ('paragraph para-data1
+                                                                    ('text text-data1 "bar"))))
+                                          ('paragraph para-data2
+                                                      ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item with sublists need to be indented, three is not enough"
+             (match (call-with-input-string
+                     (string-append "10) foo\n"
+                                    "   - bar")
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data2
+                                   ('item item-data2
+                                          ('paragraph para-data1
+                                                      ('text text-data1 "bar"))))
+                            ('list list-data1
+                                   ('item item-data1
+                                          ('paragraph para-data2
+                                                      ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item may have a list as the first block"
+             (match (call-with-input-string
+                     "- - foo"
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data1
+                                   ('item item-data1
+                                          ('list list-data2
+                                                 ('item item-data2
+                                                        ('paragraph para-data
+                                                                    ('text text-data "foo")))))
+                                  ))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item may have a list as the first block"
+             (match (call-with-input-string
+                     "1. - 2. foo"
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data1
+                                   ('item item-data1
+                                          ('list list-data2
+                                                 ('item item-data2
+                                                        ('list list-data3
+                                                               ('item item-data3
+                                                                      ('paragraph para-data
+                                                                                  ('text text-data "foo")))))))
+                                  ))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, list item can contain a heading"
+             (match (call-with-input-string
+                     (string-append "- # Foo\n"
+                                    "- Bar\n"
+                                    "  ---\n"
+                                    "  baz")
+                     parse-blocks)
+               (('document doc-data
+                            ('list list-data2
+                                   ('item item-data2
+                                          ('paragraph para-data1
+                                                      ('text text-data3 "baz"))
+                                          ('heading heading-data1
+                                                    ('text text-data1 "Bar")))
+                                   ('item item-data1
+                                          ('heading heading-data2
+                                                    ('text text-data2 "Foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
