@@ -203,7 +203,7 @@
   (make-node 'heading
              `((level . ,level)
                (closed . #t))
-             (list (make-text-node text)) ))
+             (list (make-text-node (string-trim-both text))) ))
 
 ;; Node -> Boolean
 (define (heading-node? n)

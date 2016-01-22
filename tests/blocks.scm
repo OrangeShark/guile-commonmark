@@ -158,7 +158,22 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
+(test-assert "parse-blocks, atx headings not a heading when # is escaped"
+             (match (call-with-input-string "\\## foo" parse-blocks)
+               (('document doc-data
+                           ('paragraph para-data
+                                       ('text text-data "\\## foo")))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, atx headings leading and trailing blanks are ignored"
+             (match (call-with-input-string "#                  foo                  " parse-blocks)
+               (('document doc-data
+                           ('heading heading-data
+                                       ('text text-data "foo")))
+                (eq? (heading-level heading-data) 1))
+               (x (pk 'fail x #f))))
+
 (test-assert "parse-blocks, atx headings closing # characters are optional"
              (match (call-with-input-string "## foo ##\n  ###   bar    ###" parse-blocks)
                (('document doc-data
