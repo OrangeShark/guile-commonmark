@@ -209,7 +209,6 @@
                 (eq? (heading-level heading-data) 1))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, atx headings can be empty"
              (match (call-with-input-string "## \n#\n### ###" parse-blocks)
                (('document doc-data

@@ -38,8 +38,8 @@
 
 (define re-thematic-break (make-regexp "^ {0,3}((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
-(define re-atx-heading (make-regexp "^ {0,3}(#{1,6}) "))
-(define re-atx-heading-end (make-regexp "^(.*) #+ *$"))
+(define re-atx-heading (make-regexp "^ {0,3}(#{1,6})( .*)?$"))
+(define re-atx-heading-end (make-regexp "^(.* )?#+ *$"))
 (define re-indented-code-block (make-regexp "^    "))
 (define re-setext-heading (make-regexp "^ {0,3}(=+|-+) *$"))
 (define re-empty-line (make-regexp "^ *$"))
@@ -239,10 +239,11 @@
   (make-block-quote-node (parse-line (match:suffix match))) )
 
 (define (make-atx-heading match)
-  (let ((end (atx-heading-end? (match:suffix match))))
+  (let* ((text (or (match:substring match 2) ""))
+         (end (atx-heading-end? text)))
     (if end
-        (make-heading-node (match:substring end 1) (heading-level (match:substring match 1)))
-        (make-heading-node (match:suffix match) (heading-level (match:substring match 1))))))
+        (make-heading-node (or (match:substring end 1) "") (heading-level (match:substring match 1)))
+        (make-heading-node text (heading-level (match:substring match 1))))))
 
 (define (make-code-block match)
   (make-code-block-node (match:suffix match)))
