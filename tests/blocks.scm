@@ -396,7 +396,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, fenced code must use the same character as opening fence tildes"
              (match (call-with-input-string "````\naaa\n```\n````" parse-blocks)
                (('document doc-data

@@ -43,7 +43,7 @@
 (define re-indented-code-block (make-regexp "^    "))
 (define re-setext-heading (make-regexp "^ {0,3}(=+|-+) *$"))
 (define re-empty-line (make-regexp "^ *$"))
-(define re-fenced-code (make-regexp "^ {0,3}(```|~~~)([^`]*)$"))
+(define re-fenced-code (make-regexp "^ {0,3}(```+|~~~+)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^ {0,3}([-+*])( +|$)"))
 (define re-ordered-list-marker (make-regexp "^ {0,3}([0-9]{1,9})([.)])( +|$)"))
 (define re-link-definition (make-regexp (string-append "^ {0,3}"
@@ -80,7 +80,7 @@
   (regexp-exec re-fenced-code line))
 
 (define (fenced-code-end? line fence)
-  (string-match fence line))
+  (string-match (string-append "^" fence "$") line))
 
 (define (bullet-list-marker? line)
   (regexp-exec re-bullet-list-marker line))
