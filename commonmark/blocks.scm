@@ -99,10 +99,10 @@
   (let loop ((root (make-document-node))
              (line (read-tabless-line p)))
     (if (eof-object? line)
-        (parse-reference-definitions root (lambda (doc references)
-                                            (if (null? references)
-                                                doc
-                                                (node-add-data doc 'link-references references))))
+        (parse-clean-up root (lambda (doc references)
+                               (if (null? references)
+                                   doc
+                                   (node-add-data doc 'link-references references))))
         (loop (parse-open-block root line)
               (read-tabless-line p)))))
 
@@ -123,11 +123,8 @@
 
 (define (parse-code-block n l)
   (cond ((code-block? l) => (lambda (rest-line)
-                              (replace-last-child n
-                                                  (string-append (last-child n)
-                                                                 "\n"
-                                                                 (match:suffix rest-line)))))
-        ((empty-line? l) (replace-last-child n (string-append (last-child n) "\n")))
+                              (add-child-node n (match:suffix rest-line))))
+        ((empty-line? l) (add-child-node n ""))
         (else (close-node n))))
 
 (define (parse-paragraph n l)
@@ -277,10 +274,11 @@
 (define (make-paragraph line)
   (make-paragraph-node line))
 
-(define (parse-reference-definitions n col)
+(define (parse-clean-up n col)
   (cond ((not (node? n)) (col n '()))
+        ((code-block-node? n) (remove-empty-lines n col))
         ((paragraph-node? n) (parse-reference-definition n col))
-        (else (map&co parse-reference-definitions (node-children n)
+        (else (map&co parse-clean-up (node-children n)
                       (lambda (v d)
                         (col (make-node (node-type n)
                                         (node-data n)
@@ -301,3 +299,9 @@
                                (match:substring match 6))
                          links))))
           (else (col (make-paragraph text) links)))))
+
+(define (remove-empty-lines n col)
+  (col (make-node (node-type n) (node-data n)
+                  (list (reverse-join (drop-while empty-line?
+                                                  (node-children n)))))
+       '()))
