@@ -437,7 +437,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 3)
 (test-assert "parse-blocks, fenced code can be indented and equivalent spaces removed"
              (match (call-with-input-string " ```\n aaa\naaa\n```" parse-blocks)
                (('document doc-data
@@ -470,7 +469,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, fenced code spaces are not allowed in closing fence"
              (match (call-with-input-string "~~~~~\naaa\n~~~ ~~" parse-blocks)
                (('document doc-data
@@ -509,7 +507,6 @@
                 (equal? (info-string code-data) ";"))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, fenced code coding fence cannot have info strings"
              (match (call-with-input-string "```\n``` aaa\n```" parse-blocks)
                (('document doc-data

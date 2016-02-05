@@ -80,7 +80,7 @@
   (regexp-exec re-fenced-code line))
 
 (define (fenced-code-end? line fence)
-  (string-match (string-append "^" fence "$") line))
+  (string-match (string-append "^ {0,3}" fence "$") line))
 
 (define (bullet-list-marker? line)
   (regexp-exec re-bullet-list-marker line))
@@ -140,15 +140,24 @@
            (replace-last-child n (add-text (last-child n) l)))
           (else (close-node n)))))
 
+(define (remove-min-spaces l n)
+  (let ((space-end (string-index l (lambda (c) (not (eq? #\space c))))))
+    (if space-end
+        (substring l (min n space-end))
+        (substring l (min n (string-length l))))))
+
+(define (fence-start n)
+  (node-get-data n 'fence-start))
+
 (define (parse-fenced-code n l)
   (cond ((fenced-code-end? l (node-get-data n 'fence))
          (close-node n))
         ((no-children? n)
-         (add-child-node n l))
+         (add-child-node n (remove-min-spaces l (fence-start n))))
         (else (replace-last-child n
                                   (string-append (last-child n)
                                                  "\n"
-                                                 l)))))
+                                                 (remove-min-spaces l (fence-start n)))))))
 
 (define (list-type n)
   (node-get-data n 'type))
@@ -248,6 +257,7 @@
 (define (make-fenced-code match)
   (make-fenced-code-node 
    `((fence . ,(match:substring match 1))
+     (fence-start . ,(match:start match 1))
      (info-string . ,(string-trim-both (match:substring match 2))))))
 
 (define (make-bullet-list-marker match)
