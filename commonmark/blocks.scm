@@ -28,11 +28,14 @@
 (define ascii-punctuation-characters "[]!\"#$%&'()*+,-./:;<=>?@[\\^_`{|}~]")
 (define escaped-characters (string-append "\\\\" ascii-punctuation-characters))
 (define regular-characters "[^\x01-\x19 ()\\\\]")
+(define in-parens-no-space (string-append "\\((" regular-characters "|" escaped-characters "|\\\\)*\\)"))
 (define link-label (string-append "\\[(([^][]|"
                                      escaped-characters
                                      "){1,1000})\\]"))
 (define link-destination (string-append "((" regular-characters "+|"
-                                        escaped-characters ")+)"))
+                                        escaped-characters "|"
+                                        "\\\\|"
+                                        in-parens-no-space ")+)"))
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
                                   "'(" escaped-characters "|[^'])*'))"))
 
@@ -306,7 +309,7 @@
              (loop (match:suffix match)
                    (cons (list (match:substring match 1)
                                (match:substring match 3)
-                               (match:substring match 6))
+                               (match:substring match 7))
                          links))))
           (else (col (make-paragraph text) links)))))
 

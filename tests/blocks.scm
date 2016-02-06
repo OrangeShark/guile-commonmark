@@ -538,7 +538,6 @@
                 (any (cut equal? '("foo" "/url" "'the title'")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, link reference definition with parens and escapes"
              (match (call-with-input-string
                      "[Foo*bar\\]]:my_(url) 'title (with parens)'\n\n[Foo*bar\\]]" parse-blocks)
