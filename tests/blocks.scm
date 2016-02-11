@@ -756,7 +756,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 4)
 (test-assert "parse-blocks, block quote code blocks can't interrupt a paragraph continuation lines"
              (match (call-with-input-string "> foo\n    - bar" parse-blocks)
                (('document doc-data
@@ -766,6 +765,7 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(test-expect-fail 3)
 (test-assert "parse-blocks, block quote can be empty"
              (match (call-with-input-string ">" parse-blocks)
                (('document doc-data
@@ -858,7 +858,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-blocks, block quote laziness rule allowed in nested block quotes"
              (match (call-with-input-string "> > > foo\nbar" parse-blocks)
                (('document doc-data
