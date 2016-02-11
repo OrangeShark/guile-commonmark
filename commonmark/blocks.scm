@@ -122,6 +122,11 @@
 (define (parse-block-quote n l)
   (cond ((block-quote? l) => (lambda (rest-line)
                                (parse-container-block n (match:suffix rest-line))))
+        ((open-descendant? n 'paragraph) ;; lazy continuation line
+         (let ((parsed-line (parse-line l)))
+           (if (and parsed-line (paragraph-node? parsed-line))
+               (parse-container-block n l)
+               (close-node n))))
         (else (close-node n))))
 
 (define (parse-code-block n l)

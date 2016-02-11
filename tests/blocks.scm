@@ -683,10 +683,12 @@
                 #t)
                (x (pk 'fail x #f))))
 
-;; lazy continuation lines not implemented yet
-(test-expect-fail 2)
 (test-assert "parse-blocks, block quote paragraph laziness"
-             (match (call-with-input-string "> # Foo\n> bar\nbaz" parse-blocks)
+             (match (call-with-input-string
+                     (string-append "> # Foo\n"
+                                    "> bar\n"
+                                    "baz")
+                     parse-blocks)
                (('document doc-data
                            ('block-quote quote-data
                                          ('paragraph para-data
@@ -697,7 +699,11 @@
                (x (pk 'fail x #f))))
 
 (test-assert "parse-blocks, block quote can contain lazy and non-lazy continuation lines"
-             (match (call-with-input-string "> bar\nbaz\n> foo" parse-blocks)
+             (match (call-with-input-string
+                     (string-append "> bar\n"
+                                    "baz\n"
+                                    "> foo")
+                     parse-blocks)
                (('document doc-data
                            ('block-quote quote-data
                                          ('paragraph para-data

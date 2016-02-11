@@ -58,6 +58,7 @@
             rest-children
             add-child-node
             replace-last-child
+            open-descendant?
             print-node))
 
 ;; Node-Type is one of:
@@ -110,7 +111,7 @@
 
 ;; Node Node-Type -> Boolean
 (define (node-type? n t)
-  (eq? (node-type n) t))
+  (and (node? n) (eq? (node-type n) t)))
 
 
 ;; Document node
@@ -267,6 +268,13 @@
                             (fold (cut cons (fold-node f <>) <>)
                                   '()
                                   (node-children n)))))))
+
+(define (open-descendant? node node-type)
+  (cond ((not (node? node)) #f)
+        ((and (node-type? node node-type) (not (node-closed? node)))
+         #t)
+        ((no-children? node) #f)
+        (else (open-descendant? (last-child node) node-type))))
 
 (define (print-node n)
   (define (inner n d)
