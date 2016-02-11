@@ -148,7 +148,7 @@
 ;; which contains other nodes as children
 ;; Node -> Node
 (define (make-block-quote-node node)
-  (make-node 'block-quote #f (list node)))
+  (make-node 'block-quote #f (if node (list node) '())))
 
 ;; Node -> Boolean
 (define (block-quote-node? n)

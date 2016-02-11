@@ -765,7 +765,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 3)
 (test-assert "parse-blocks, block quote can be empty"
              (match (call-with-input-string ">" parse-blocks)
                (('document doc-data

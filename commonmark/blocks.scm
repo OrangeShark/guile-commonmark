@@ -250,7 +250,7 @@
   (make-thematic-break-node))
 
 (define (make-block-quote match)
-  (make-block-quote-node (parse-line (match:suffix match))) )
+  (make-block-quote-node (parse-line (match:suffix match))))
 
 (define (make-atx-heading match)
   (let* ((text (or (match:substring match 2) ""))
