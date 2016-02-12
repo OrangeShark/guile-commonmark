@@ -52,12 +52,15 @@
             text-node?
             make-softbreak-node
             softbreak-node?
+            make-blank-node
+            blank-node?
             child-closed?
             close-node
             last-child
             rest-children
             add-child-node
             replace-last-child
+            remove-last-child
             open-descendant?
             print-node))
 
@@ -73,6 +76,7 @@
 ;; - 'heading
 ;; - 'text
 ;; - 'softbreak
+;; - 'blank
 ;; interp. The type of CommonMark block node
 
 ;; Node is (make-node Node-Type Node-Data (listof Node))
@@ -148,7 +152,9 @@
 ;; which contains other nodes as children
 ;; Node -> Node
 (define (make-block-quote-node node)
-  (make-node 'block-quote #f (if node (list node) '())))
+  (make-node 'block-quote #f  (if (or (not node) (blank-node? node))
+                                 '()
+                                 (list node))))
 
 ;; Node -> Boolean
 (define (block-quote-node? n)
@@ -189,7 +195,10 @@
 ;; represents a item which can only be in a list
 ;; Node -> Node
 (define (make-item-node node padding)
-  (make-node 'item `((padding . ,padding)) (if node (list node) '()) ))
+  (make-node 'item `((padding . ,padding)) (list node) #;
+             (if (or (not node) (blank-node? node))
+                 '()
+                 (list node))))
 
 ;; Node -> Boolean
 (define (item-node? n)
@@ -235,10 +244,15 @@
 (define (softbreak-node? n)
   (node-type? n 'softbreak))
 
+;; Blank node
+(define (make-blank-node)
+  (make-node 'blank '((closed . #t))))
+
+(define (blank-node? n)
+  (node-type? n 'blank))
+
 (define (child-closed? n)
   (node-closed? (last-child n)))
-
-
 
 ;; Node -> Node
 ;; closes the node without changing any of the other properties
@@ -260,6 +274,11 @@
   (make-node (node-type node)
              (node-data node)
              (cons new-child (rest-children node))))
+
+(define (remove-last-child node)
+  (make-node (node-type node)
+             (node-data node)
+             (rest-children node)))
 
 (define (fold-node f n)
   (cond ((not (node? n)) n)

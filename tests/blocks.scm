@@ -1031,7 +1031,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 3)
 (test-assert "parse-blocks, list item may not contain blocks with more than one blank line except fenced code block"
              (match (call-with-input-string
                      (string-append "- ```\n"
@@ -1065,15 +1064,15 @@
 
 (test-assert "parse-blocks, list item may contain any kind of block"
              (match (call-with-input-string
-                     "1.  foo
-
-    ```
-    bar
-    ```
-
-    baz
-
-    > bam"
+                     (string-append "1.  foo\n"
+                                    "\n"
+                                    "    ```\n"
+                                    "    bar\n"
+                                    "    ```\n"
+                                    "\n"
+                                    "    baz\n"
+                                    "\n"
+                                    "    > bam")
                      parse-blocks)
                (('document doc-data
                            ('list list-data
@@ -1089,13 +1088,14 @@
                 #t)
                (x (pk 'fail x #f))))
 
+(test-expect-fail 1)
 (test-assert "parse-blocks, list item contain indented code blocks that preserve empty lines"
              (match (call-with-input-string
-                     "- foo
-
-      bar
-
-      baz"
+                     (string-append "- foo\n"
+                                    "\n"
+                                    "      bar\n"
+                                    "\n"
+                                    "      baz")
                      parse-blocks)
                (('document doc-data
                            ('list list-data
