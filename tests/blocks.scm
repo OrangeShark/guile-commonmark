@@ -1088,7 +1088,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, list item contain indented code blocks that preserve empty lines"
              (match (call-with-input-string
                      (string-append "- foo\n"
