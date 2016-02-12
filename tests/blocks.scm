@@ -1005,44 +1005,18 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 3)
-(test-assert "parse-blocks, list item may not contain blocks with more than one blank line except fenced code block"
+(test-assert "parse-blocks, list item may not contain blocks with more than one blank line"
              (match (call-with-input-string
-                     "- foo
-
-  bar
-
-- foo
-
-
-  bar
-
-- ```
-  foo
-
-
-  bar
-  ```
-
-- baz
-
-  + ```
-    foo
-
-
-    bar
-    ```"
+                     (string-append "- foo\n"
+                                    "\n"
+                                    "  bar\n"
+                                    "\n"
+                                    "- foo\n"
+                                    "\n"
+                                    "\n"
+                                    "  bar")
                      parse-blocks)
                (('document doc-data
-                           ('list list-data2
-                                  ('item item-data4
-                                         ('list list-data3
-                                                ('item item-data5
-                                                       ('fenced-code code-data2 "foo\n\n\nbar")))
-                                         ('paragraph para-data5
-                                                     ('text text-data5 "baz")))
-                                  ('item item-data3
-                                         ('fenced-code code-data1 "foo\n\n\nbar")))
                            ('paragraph para-data4
                                        ('text text-data4 "bar"))
                            ('list list-data1
@@ -1054,6 +1028,38 @@
                                                      ('text text-data1 "bar"))
                                          ('paragraph para-data2
                                                      ('text text-data2 "foo")))))
+                #t)
+               (x (pk 'fail x #f))))
+
+(test-expect-fail 3)
+(test-assert "parse-blocks, list item may not contain blocks with more than one blank line except fenced code block"
+             (match (call-with-input-string
+                     (string-append "- ```\n"
+                                    "  foo\n"
+                                    "\n"
+                                    "\n"
+                                    "  bar\n"
+                                    "  ```\n"
+                                    "\n"
+                                    "- baz\n"
+                                    "\n"
+                                    "  + ```\n"
+                                    "    foo\n"
+                                    "\n"
+                                    "\n"
+                                    "    bar\n"
+                                    "    ```")
+                     parse-blocks)
+               (('document doc-data
+                           ('list list-data2
+                                  ('item item-data4
+                                         ('list list-data3
+                                                ('item item-data5
+                                                       ('fenced-code code-data2 "foo\n\n\nbar")))
+                                         ('paragraph para-data5
+                                                     ('text text-data5 "baz")))
+                                  ('item item-data3
+                                         ('fenced-code code-data1 "foo\n\n\nbar"))))
                 #t)
                (x (pk 'fail x #f))))
 
