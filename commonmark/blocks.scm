@@ -217,6 +217,11 @@
                                   (substring l padding)))
           ((blank-node? (last-child n))
            (close-node (remove-last-child n)))
+          ((open-descendant? n 'paragraph)
+           (let ((parsed-line (parse-line l)))
+             (if (or (paragraph-node? parsed-line) (code-block-node? parsed-line))
+                 (parse-container-block n l)
+                 (close-node (replace-last-child n (close-node (last-child n)))))))
           (else (close-node (replace-last-child n (close-node (last-child n))))))))
 
 ;; Node String -> Node

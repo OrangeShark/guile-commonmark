@@ -1429,7 +1429,6 @@
                 #t)
                (x (pk 'fail x #f))))
 
-(test-expect-fail 4)
 (test-assert "parse-blocks, list item lazy continuation lines"
              (match (call-with-input-string
                      (string-append "  1.  A paragraph\n"
