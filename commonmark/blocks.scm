@@ -124,7 +124,7 @@
                                (parse-container-block n (match:suffix rest-line))))
         ((open-descendant? n 'paragraph) ;; lazy continuation line
          (let ((parsed-line (parse-line l)))
-           (if (and parsed-line (or (paragraph-node? parsed-line) (code-block-node? parsed-line)))
+           (if (or (paragraph-node? parsed-line) (code-block-node? parsed-line))
                (parse-container-block n l)
                (close-node n))))
         (else (close-node n))))
