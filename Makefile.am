@@ -11,9 +11,18 @@ SOURCES =                           \
   commonmark/sxml.scm               \
   commonmark.scm
 
-TESTS =	                            \
-  tests/node.scm                    \
-  tests/blocks.scm
+TESTS =	                                       \
+  tests/node.scm                               \
+  tests/blocks/paragraphs.scm                  \
+  tests/blocks/atx-headings.scm                \
+  tests/blocks/block-quotes.scm                \
+  tests/blocks/code-blocks.scm                 \
+  tests/blocks/fenced-code.scm                 \
+  tests/blocks/link-reference-definitions.scm  \
+  tests/blocks/list-items.scm                  \
+  tests/blocks/lists.scm                       \
+  tests/blocks/setext-headings.scm             \
+	tests/blocks/thematic-breaks.scm
 
 TEST_EXTENSIONS = .scm
 
