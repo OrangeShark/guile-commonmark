@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015-2016  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -24,10 +24,13 @@
             parse-text))
 
 
-;; Port -> HTML
-;; parses a commonmark document and converts it to HTML
-(define (commonmark->sxml p)
-  (document->sxml (parse-inlines (parse-blocks p))))
+(define* (commonmark->sxml #:optional (string-or-port (current-input-port)))
+  "Parses a commonmark document from optional argument STRING-OR-PORT or
+the current input port into SXML."
+  (let ((port (if (string? string-or-port)
+                  (open-input-string string-or-port)
+                  string-or-port)))
+    (document->sxml (parse-inlines (parse-blocks port)))))
 
 
 (define (parse-text s)
