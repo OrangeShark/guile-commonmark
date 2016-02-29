@@ -20,10 +20,13 @@
   #:export (parse-inlines))
 
 
-;; Document -> Document
-;; parses the lines of the document
-;; !!!
+;; Node -> Node
+;; parses the inline text of paragraphs and heading nodes
+(define (parse-inlines node)
+  (cond ((not (node? node)) node)
+        ((or (paragraph-node? node) (heading-node? node)) (parse-inline node))
+        (else (make-node (node-type node) (node-data node) (map parse-inlines (node-children node))))))
 
-(define (parse-inlines d)
-  d)
+(define (parse-inline node)
+  node)
 
