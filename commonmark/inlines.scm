@@ -16,9 +16,25 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark inlines)
+  #:use-module (ice-9 regex)
   #:use-module (commonmark node)
   #:export (parse-inlines))
 
+(define re-start-ticks (make-regexp "^`+"))
+(define re-ticks (make-regexp "`+"))
+(define re-main (make-regexp "^[^`]+"))
+
+(define (start-ticks? text position)
+  (regexp-exec re-start-ticks text position))
+
+(define (end-ticks? text start-ticks)
+  (string-match (match:substring start-ticks 0) text (match:end start-ticks 0)))
+
+(define (normal-text? text position)
+  (regexp-exec re-main text position))
+
+(define (make-code-spans text)
+  (make-node 'code-span #f (list text)))
 
 ;; Node -> Node
 ;; parses the inline text of paragraphs and heading nodes
@@ -28,5 +44,26 @@
         (else (make-node (node-type node) (node-data node) (map parse-inlines (node-children node))))))
 
 (define (parse-inline node)
-  node)
+  (let ((text (last-child (last-child node))))
+    (define (parse-ticks position nodes)
+      (let* ((start-ticks (start-ticks? text position))
+             (end-ticks (end-ticks? text start-ticks)))
+        (if end-ticks
+            (parse-char (match:end end-ticks 0)
+                        (cons (make-code-spans (substring text (match:end start-ticks 0)
+                                                          (match:start end-ticks 0)))
+                              nodes))
+            (parse-char (match:end start-ticks 0)
+                        (cons (make-text-node (match:substring start-ticks 0)) nodes)))))
+    (define (parse-normal-text position nodes)
+      (let ((normal-text (normal-text? text position)))
+        (parse-char (match:end normal-text 0)
+                    (cons (make-text-node (match:substring normal-text 0)) nodes))))
+    (define (parse-char position nodes)
+      (if (>= position (string-length text))
+          nodes
+          (case (string-ref text position)
+            ((#\`) (parse-ticks position nodes))
+            (else (parse-normal-text position nodes)))))
+    (make-node (node-type node) (node-data node) (parse-char 0 '()))))
 
