@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015, 2016  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
