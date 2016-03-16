@@ -33,9 +33,6 @@
 (define (normal-text? text position)
   (regexp-exec re-main text position))
 
-(define (make-code-spans text)
-  (make-node 'code-span #f (list text)))
-
 ;; Node -> Node
 ;; parses the inline text of paragraphs and heading nodes
 (define (parse-inlines node)
@@ -50,7 +47,7 @@
              (end-ticks (end-ticks? text start-ticks)))
         (if end-ticks
             (parse-char (match:end end-ticks 0)
-                        (cons (make-code-spans (substring text (match:end start-ticks 0)
+                        (cons (make-code-span-node (substring text (match:end start-ticks 0)
                                                           (match:start end-ticks 0)))
                               nodes))
             (parse-char (match:end start-ticks 0)

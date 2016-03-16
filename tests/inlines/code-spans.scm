@@ -26,7 +26,7 @@
 (test-begin "inlines code-spans")
 
 (define (make-paragraph text)
-  (make-node 'document #f 
+  (make-node 'document #f
              (list (make-node 'paragraph #f
                               (list (make-node 'text #f (list text)))))))
 
@@ -35,7 +35,7 @@
   (match (parse-inlines (make-paragraph "`foo`"))
     (('document doc-data
                 ('paragraph para-data
-                            ('code-span code-data 
+                            ('code-span code-data
                                         "foo")))
      #t)
     (x (pk 'fail x #f))))

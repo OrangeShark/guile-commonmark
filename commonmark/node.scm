@@ -54,6 +54,8 @@
             softbreak-node?
             make-blank-node
             blank-node?
+            make-code-span-node
+            code-span-node?
             child-closed?
             close-node
             last-child
@@ -77,6 +79,7 @@
 ;; - 'text
 ;; - 'softbreak
 ;; - 'blank
+;; - 'code-span
 ;; interp. The type of CommonMark block node
 
 ;; Node is (make-node Node-Type Node-Data (listof Node))
@@ -250,6 +253,13 @@
 
 (define (blank-node? n)
   (node-type? n 'blank))
+
+;; Code span node
+(define (make-code-span-node text)
+  (make-node 'code-span #f (list (string-trim-both text))))
+
+(define (code-span-node? node)
+  (node-type? node 'code-span))
 
 (define (child-closed? n)
   (node-closed? (last-child n)))
