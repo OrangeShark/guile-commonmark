@@ -27,12 +27,14 @@
 (define (start-ticks? text position)
   (regexp-exec re-start-ticks text position))
 
-(define (end-ticks? text start-ticks)
-  (string-match (match:substring start-ticks 0) text (match:end start-ticks 0)))
+(define (end-ticks? text position)
+  (regexp-exec re-ticks text position))
 
 (define (normal-text? text position)
   (regexp-exec re-main text position))
 
+(define (match-length match)
+  (string-length (match:substring match 0)))
 ;; Node -> Node
 ;; parses the inline text of paragraphs and heading nodes
 (define (parse-inlines node)
@@ -43,15 +45,17 @@
 (define (parse-inline node)
   (let ((text (last-child (last-child node))))
     (define (parse-ticks position nodes)
-      (let* ((start-ticks (start-ticks? text position))
-             (end-ticks (end-ticks? text start-ticks)))
-        (if end-ticks
-            (parse-char (match:end end-ticks 0)
-                        (cons (make-code-span-node (substring text (match:end start-ticks 0)
-                                                          (match:start end-ticks 0)))
-                              nodes))
-            (parse-char (match:end start-ticks 0)
-                        (cons (make-text-node (match:substring start-ticks 0)) nodes)))))
+      (let ((start-ticks (start-ticks? text position)))
+        (let loop ((end-ticks (end-ticks? text (match:end start-ticks 0))))
+          (cond ((not end-ticks)
+                 (parse-char (match:end start-ticks 0)
+                             (cons (make-text-node (match:substring start-ticks 0)) nodes)))
+                ((= (match-length start-ticks) (match-length end-ticks))
+                 (parse-char (match:end end-ticks 0)
+                             (cons (make-code-span-node (substring text (match:end start-ticks 0)
+                                                                   (match:start end-ticks 0)))
+                                   nodes)))
+                (else (loop (end-ticks? text (match:end end-ticks 0))))))))
     (define (parse-normal-text position nodes)
       (let ((normal-text (normal-text? text position)))
         (parse-char (match:end normal-text 0)
