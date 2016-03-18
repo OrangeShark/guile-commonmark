@@ -16,6 +16,7 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark node)
+  #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-26)
@@ -256,7 +257,9 @@
 
 ;; Code span node
 (define (make-code-span-node text)
-  (make-node 'code-span #f (list (string-trim-both text))))
+  (define (collapse-spaces)
+    (regexp-substitute/global #f "[ \t\n]+" text 'pre " " 'post))
+  (make-node 'code-span #f (list (string-trim-both (collapse-spaces)))))
 
 (define (code-span-node? node)
   (node-type? node 'code-span))
