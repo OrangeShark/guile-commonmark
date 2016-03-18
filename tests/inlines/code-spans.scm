@@ -90,8 +90,10 @@
   (match (parse-inlines (make-paragraph "`foo\\`bar`"))
     (('document doc-data
                 ('paragraph para-data
+                            ('text text-data2
+                                   "`")
                             ('text text-data
-                                   "bar`")
+                                   "bar")
                             ('code-span code-data
                                         "foo\\")))
      #t)
@@ -104,7 +106,7 @@
                             ('code-span code-data
                                         "*")
                             ('text text-data
-                                   "*foo`")))
+                                   "*foo")))
      #t)
     (x (pk 'fail x #f))))
 
@@ -117,7 +119,7 @@
                             ('code-span code-data
                                         "link](/foo")
                             ('text text-data
-                                   "[not a")))
+                                   "[not a ")))
      #t)
     (x (pk 'fail x #f))))
 
@@ -125,8 +127,10 @@
   (match (parse-inlines (make-paragraph "`<a href=\"`\">`"))
     (('document doc-data
                 ('paragraph para-data
+                            ('text text-data1
+                                   "`")
                             ('text text-data2
-                                   "\">`")
+                                   "\">")
                             ('code-span code-data
                                         "<a href=\"")))
      #t)
@@ -149,8 +153,10 @@
   (match (parse-inlines (make-paragraph "`<http://foo.bar.`baz>`"))
     (('document doc-data
                 ('paragraph para-data
+                            ('text text-data1
+                                   "`")
                             ('text text-data2
-                                   "baz>`")
+                                   "baz>")
                             ('code-span code-data
                                         "<http://foo.bar.")))
      #t)
