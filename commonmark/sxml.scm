@@ -54,7 +54,7 @@
   `(p ,@(fold-nodes node->sxml (node-children n))))
 
 (define (text-node->sxml n)
-  (node-children n))
+  (last-child n))
 
 (define (code-span-node->sxml n)
   `(code ,@(node-children n)))
