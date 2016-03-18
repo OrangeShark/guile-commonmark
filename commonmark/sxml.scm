@@ -43,6 +43,7 @@
         ((heading-node? n) (heading-node->sxml n))
         ((list-node? n) (list-node->sxml n))
         ((text-node? n) (text-node->sxml n))
+        ((code-span-node? n) (code-span-node->sxml n))
         ((softbreak-node? n) (softbreak-node->sxml n))
         (else (error "unknown node"))))
 
@@ -54,6 +55,9 @@
 
 (define (text-node->sxml n)
   (node-children n))
+
+(define (code-span-node->sxml n)
+  `(code ,@(node-children n)))
 
 (define (block-quote-node->sxml n)
   `(blockquote ,@(fold-nodes node->sxml (node-children n))))
