@@ -106,7 +106,9 @@
                             ('code-span code-data
                                         "*")
                             ('text text-data
-                                   "*foo")))
+                                   "foo")
+                            ('text text-data
+                                   "*")))
      #t)
     (x (pk 'fail x #f))))
 
