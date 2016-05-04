@@ -51,6 +51,49 @@
      #t)
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, not emphasis because punctuation after alphanumeric before"
+  (match (parse-inlines (make-paragraph "a*\"foo\"*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "*")
+                            ('text text-data2 "\"foo\"")
+                            ('text text-data3 "*")
+                            ('text text-data4 "a")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not emphasis because unicode nonbreaking spaces count as whitespace"
+  (match (parse-inlines (make-paragraph "*\xa0a\xa0*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "*")
+                            ('text text-data2 "\xa0a\xa0")
+                            ('text text-data3 "*")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with intraword emphasis"
+  (match (parse-inlines (make-paragraph "foo*bar*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data "bar"))
+                            ('text text-data "foo")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+
+(test-assert "parse-inlines, emphasis with intraword emphasis"
+  (match (parse-inlines (make-paragraph "5*6*78"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "78")
+                            ('emphasis emphasis-data
+                                       ('text text-data "6"))
+                            ('text text-data "5")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
