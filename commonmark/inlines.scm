@@ -26,7 +26,7 @@
 
 (define re-start-ticks (make-regexp "^`+"))
 (define re-ticks (make-regexp "`+"))
-(define re-main (make-regexp "^[^`*]+"))
+(define re-main (make-regexp "^[^`*_]+"))
 
 (define (start-ticks? text)
   (regexp-exec re-start-ticks (text-value text) (text-position text)))
@@ -65,8 +65,9 @@
   (>= (text-position text) (string-length (text-value text))))
 
 (define-record-type <delimiter>
-  (make-delimiter count open close)
+  (make-delimiter ch count open close)
   delimiter?
+  (ch delimiter-ch)
   (count delimiter-count)
   (open delimiter-open?)
   (close delimiter-close?))
@@ -88,27 +89,28 @@
   (and (not whitespace-before)
        (or (not punctuation-before) whitespace-after punctuation-after)))
 
-(define (scan-delim text c)
-  (let* ((position (text-position text))
+(define (scan-delim text)
+  (let* ((ch (text-char text))
+         (position (text-position text))
          (text (text-value text))
-         (delim-end (string-skip text c position))
-         (delim-start (string-skip-right text c 0 position))
+         (delim-end (string-skip text ch position))
+         (delim-start (string-skip-right text ch 0 position))
          (whitespace-before (whitespace? text delim-start))
          (whitespace-after (whitespace? text delim-end))
          (punctuation-before (punctuation? text delim-start))
          (punctuation-after (punctuation? text delim-end)))
-    (make-delimiter (- (or delim-end (string-length text)) position)
+    (make-delimiter ch (- (or delim-end (string-length text)) position)
                     (left-flanking? whitespace-after punctuation-after whitespace-before punctuation-before)
                     (right-flanking? whitespace-after punctuation-after whitespace-before punctuation-before))))
 
 (define (match? open-delim close-delim)
-  #t)
+  (eq? (delimiter-ch open-delim) (delimiter-ch close-delim)))
 
 (define (matching-opening? delim-stack delim)
   (find (cut match? <> delim) delim-stack))
 
 (define (remake-delimiter count delim)
-  (make-delimiter count (delimiter-open? delim) (delimiter-close? delim)))
+  (make-delimiter (delimiter-ch delim) count (delimiter-open? delim) (delimiter-close? delim)))
 
 (define (match-delim opening-delim closing-delim)
   (let ((open-count (delimiter-count opening-delim))
@@ -132,7 +134,7 @@
     (else 'strong)))
 
 (define (delim->text delim)
-  (make-text-node (make-string (delimiter-count delim) #\*)))
+  (make-text-node (make-string (delimiter-count delim) (delimiter-ch delim))))
 
 (define (parse-emphasis text nodes delim-stack nodes-stack)
   (define (parse-matching-delim delim matching-delim)
@@ -162,7 +164,7 @@
                          (cons od (cdr ds))
                          (cons (cons (make-emphasis-node n (emphasis-type delim)) (car ns)) (cdr ns)))))
           (loop (cdr ds) (append n (cons (delim->text (car ds)) (car ns))) (cdr ns)))))
-  (let ((delim (scan-delim text #\*)))
+  (let ((delim (scan-delim text)))
     (cond ((and (delimiter-close? delim) (delimiter-open? delim))
            (let ((matching-delim (matching-opening? delim-stack delim)))
              (if matching-delim
@@ -222,7 +224,7 @@
       (pop-remaining-delim nodes delim-stack nodes-stack)
       (case (text-char text)
         ((#\`) (parse-ticks text nodes delim-stack nodes-stack))
-        ((#\*) (parse-emphasis text nodes delim-stack nodes-stack))
+        ((#\* #\_) (parse-emphasis text nodes delim-stack nodes-stack))
         (else (parse-normal-text text nodes delim-stack nodes-stack)))))
 
 (define (parse-inline node)

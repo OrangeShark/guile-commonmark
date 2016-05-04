@@ -94,6 +94,15 @@
      (em? emphasis-data))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, simple _ emphasis"
+  (match (parse-inlines (make-paragraph "_foo bar_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data "foo bar"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
