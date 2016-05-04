@@ -148,7 +148,7 @@
 ;; with text nodes as children
 ;; String -> Node
 (define (make-paragraph-node text)
-  (make-node 'paragraph #f (list (make-text-node text))))
+  (make-node 'paragraph #f (list (make-text-node (string-trim text)))))
 
 ;; Node -> Boolean
 (define (paragraph-node? n)
@@ -229,7 +229,7 @@
 ;; Text node
 ;; String Boolean -> Node
 (define (make-text-node text)
-  (make-node 'text '((closed . #t)) (list (string-trim text))))
+  (make-node 'text '((closed . #t)) (list text)))
 
 (define (join-text-nodes tn1 tn2)
   (make-node 'text

@@ -176,13 +176,18 @@
              (if matching-delim
                  (parse-matching-delim delim matching-delim)
                  (parse-char (text-advance text (delimiter-count delim))
-                             nodes
+                             (cons (delim->text delim) nodes)
                              delim-stack
                              nodes-stack))))
+          ((delimiter-open? delim)
+           (parse-char (text-advance text (delimiter-count delim))
+                       '()
+                       (cons delim delim-stack)
+                       (cons nodes nodes-stack)))
           (else (parse-char (text-advance text (delimiter-count delim))
-                            '()
-                            (cons delim delim-stack)
-                            (cons nodes nodes-stack))))))
+                            (cons (delim->text delim) nodes)
+                            delim-stack
+                            nodes-stack)))))
 
 (define (parse-ticks text nodes delim-stack nodes-stack)
   (let ((start-ticks (start-ticks? text)))

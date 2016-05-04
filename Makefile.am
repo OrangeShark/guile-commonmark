@@ -22,8 +22,9 @@ TESTS =	                                       \
   tests/blocks/list-items.scm                  \
   tests/blocks/lists.scm                       \
   tests/blocks/setext-headings.scm             \
-	tests/blocks/thematic-breaks.scm             \
-	tests/inlines/code-spans.scm
+  tests/blocks/thematic-breaks.scm             \
+  tests/inlines/code-spans.scm                 \
+  tests/inlines/emphasis.scm
 
 TEST_EXTENSIONS = .scm
 
