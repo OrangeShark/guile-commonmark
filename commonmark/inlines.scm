@@ -61,6 +61,9 @@
 (define (text-char text)
   (string-ref (text-value text) (text-position text)))
 
+(define (text-length text)
+  (string-length (text-value text)))
+
 (define (text-end? text)
   (>= (text-position text) (string-length (text-value text))))
 
@@ -90,6 +93,8 @@
        (or (not punctuation-before) whitespace-after punctuation-after)))
 
 (define (scan-delim text)
+  (define (count-delim delim-end position)
+    (- (or delim-end (text-length text)) position))
   (let* ((ch (text-char text))
          (position (text-position text))
          (text (text-value text))
@@ -98,10 +103,14 @@
          (whitespace-before (whitespace? text delim-start))
          (whitespace-after (whitespace? text delim-end))
          (punctuation-before (punctuation? text delim-start))
-         (punctuation-after (punctuation? text delim-end)))
-    (make-delimiter ch (- (or delim-end (string-length text)) position)
-                    (left-flanking? whitespace-after punctuation-after whitespace-before punctuation-before)
-                    (right-flanking? whitespace-after punctuation-after whitespace-before punctuation-before))))
+         (punctuation-after (punctuation? text delim-end))
+         (left (left-flanking? whitespace-after punctuation-after whitespace-before punctuation-before))
+         (right (right-flanking? whitespace-after punctuation-after whitespace-before punctuation-before)))
+    (case ch
+      ((#\*) (make-delimiter ch (count-delim delim-end position) left right))
+      ((#\_) (make-delimiter ch (count-delim delim-end position)
+                             (and left (or (not right) punctuation-before))
+                             (and right (or (not left) punctuation-after)))))))
 
 (define (match? open-delim close-delim)
   (eq? (delimiter-ch open-delim) (delimiter-ch close-delim)))

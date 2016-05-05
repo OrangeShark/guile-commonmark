@@ -103,6 +103,50 @@
      (em? emphasis-data))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, not emphasis because punctuation after alphanumeric before"
+  (match (parse-inlines (make-paragraph "a_\"foo\"_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "_")
+                            ('text text-data2 "\"foo\"")
+                            ('text text-data3 "_")
+                            ('text text-data4 "a")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with _ is not allowed inside words"
+  (match (parse-inlines (make-paragraph "foo_bar_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "_")
+                            ('text text-data2 "bar")
+                            ('text text-data3 "_")
+                            ('text text-data4 "foo")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with _ is not allowed inside words"
+  (match (parse-inlines (make-paragraph "5_6_78"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "78")
+                            ('text text-data2 "_")
+                            ('text text-data3 "6")
+                            ('text text-data4 "_")
+                            ('text text-data5 "5")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with _ is not allowed inside words"
+  (match (parse-inlines (make-paragraph "пристаням_стремятся_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "_")
+                            ('text text-data2 "стремятся")
+                            ('text text-data3 "_")
+                            ('text text-data4 "пристаням")))
+     #t)
+    (x (pk 'fail x #f))))
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
