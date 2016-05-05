@@ -147,6 +147,74 @@
                             ('text text-data4 "пристаням")))
      #t)
     (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with _ is not allowed to have delimiters to be both flanking"
+  (match (parse-inlines (make-paragraph "aa_\"bb\"_cc"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "cc")
+                            ('text text-data2 "_")
+                            ('text text-data3 "\"bb\"")
+                            ('text text-data4 "_")
+                            ('text text-data5 "aa")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis with _ is allowed when preceded by punctuation"
+  (match (parse-inlines (make-paragraph "foo-_(bar)_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "(bar)"))
+                            ('text text-data2 "foo-")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis delimiters must match"
+  (match (parse-inlines (make-paragraph "_foo*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "*")
+                            ('text text-data2 "foo")
+                            ('text text-data3 "_")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis closing delimiter must not be preceded by whitespace"
+  (match (parse-inlines (make-paragraph "*foo bar *"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "*")
+                            ('text text-data2 "foo bar ")
+                            ('text text-data3 "*")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not emphasis because second * is not right-flanking delimiter run"
+  (match (parse-inlines (make-paragraph "*(*foo)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "foo)")
+                            ('text text-data2 "*")
+                            ('text text-data3 "(")
+                            ('text text-data4 "*")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis example showing previous restriction benefits"
+  (match (parse-inlines (make-paragraph "*(*foo*)*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 ")")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "foo"))
+                                       ('text text-data3 "("))
+                           ))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
