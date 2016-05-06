@@ -215,6 +215,98 @@
           (em? emphasis-data2)))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, emphasis intraword emphasis with * is allowed"
+  (match (parse-inlines (make-paragraph "*foo*bar"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "bar")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not emphasis because the closing _ is preceded by whitespace"
+  (match (parse-inlines (make-paragraph "_foo bar _"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "_")
+                            ('text text-data2 "foo bar ")
+                            ('text text-data3 "_")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not emphasis because the second _ is preceded by punctuation and
+followed by an alphanumeric"
+  (match (parse-inlines (make-paragraph "_(_foo)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "foo)")
+                            ('text text-data2 "_")
+                            ('text text-data3 "(")
+                            ('text text-data4 "_")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis within emphasis"
+  (match (parse-inlines (make-paragraph "_(_foo_)_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 ")")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "foo"))
+                                       ('text text-data3 "("))
+                           ))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, intraword emphasis is disallowed for _"
+  (match (parse-inlines (make-paragraph "_foo_bar"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "bar")
+                            ('text text-data2 "_")
+                            ('text text-data3 "foo")
+                            ('text text-data4 "_")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, intraword emphasis is disallowed for _"
+  (match (parse-inlines (make-paragraph "_пристаням_стремятся"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "стремятся")
+                            ('text text-data2 "_")
+                            ('text text-data3 "пристаням")
+                            ('text text-data4 "_")))
+     #t)
+    (x (pk 'fail x #f))))
+
+
+(test-assert "parse-inlines, intraword emphasis is disallowed for _"
+  (match (parse-inlines (make-paragraph "_foo_bar_baz_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "baz")
+                                       ('text text-data2 "_")
+                                       ('text text-data3 "bar")
+                                       ('text text-data4 "_")
+                                       ('text text-data5 "foo"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis closing delimiter is followed by punctuation"
+  (match (parse-inlines (make-paragraph "_(bar)_."))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 ".")
+                            ('emphasis emphasis-data
+                                       ('text text-data2 "(bar)"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
