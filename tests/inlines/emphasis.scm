@@ -307,6 +307,152 @@ followed by an alphanumeric"
      (em? emphasis-data))
     (x (pk 'fail x #f))))
 
+(define (strong? node-data)
+  (eq? 'strong (assq-ref node-data 'type)))
+
+
+(test-assert "parse-inlines, emphasis rule 5"
+  (match (parse-inlines (make-paragraph "**foo bar**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data "foo bar"))))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because opening delimiter
+is followed by whitespace"
+  (match (parse-inlines (make-paragraph "** foo bar**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "**")
+                            ('text text-data2 " foo bar")
+                            ('text text-data3 "**")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because opening ** is preceded
+by an alphanumeric and followed by punctuation"
+  (match (parse-inlines (make-paragraph "a**\"foo\"**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "**")
+                            ('text text-data2 "\"foo\"")
+                            ('text text-data3 "**")
+                            ('text text-data4 "a") ))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis with ** is permitted"
+  (match (parse-inlines (make-paragraph "foo**bar**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "bar"))
+                            ('text text-data2 "foo")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 6"
+  (match (parse-inlines (make-paragraph "__foo bar__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data "foo bar"))))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because opening delimiter
+is followed by whitespace"
+  (match (parse-inlines (make-paragraph "__ foo bar__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 " foo bar")
+                            ('text text-data3 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because newline counts as whitespace 
+is followed by whitespace"
+  (match (parse-inlines (make-paragraph "__\nfoo bar__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 "\nfoo bar")
+                            ('text text-data3 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because the opening __ is preceded
+by an alphanumeric and followed by punctuation"
+  (match (parse-inlines (make-paragraph "a__\"foo\"__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 "\"foo\"")
+                            ('text text-data3 "__")
+                            ('text text-data4 "a")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "foo__bar__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 "bar")
+                            ('text text-data3 "__")
+                            ('text text-data4 "foo")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "5__6__78"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "78")
+                            ('text text-data2 "__")
+                            ('text text-data3 "6")
+                            ('text text-data4 "__")
+                            ('text text-data4 "5")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "пристаням__стремятся__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 "стремятся")
+                            ('text text-data3 "__")
+                            ('text text-data4 "пристаням")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "__foo, __bar__, baz__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 ", baz")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data3 "foo, "))))
+     (and (strong? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis is strong emphais because it is preceded by punctuation"
+  (match (parse-inlines (make-paragraph "foo-__(bar)__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "(bar)"))
+                             ('text text-data2 "foo-")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
