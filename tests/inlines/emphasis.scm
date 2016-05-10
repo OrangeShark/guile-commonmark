@@ -453,6 +453,152 @@ by an alphanumeric and followed by punctuation"
      (strong? emphasis-data))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, emphasis not strong emphasis because closing delimiter
+is preceded by whitespace"
+  (match (parse-inlines (make-paragraph "**foo bar **"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "**")
+                            ('text text-data2 "foo bar ")
+                            ('text text-data3 "**")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis not strong emphasis because the second ** is preceded
+by punctuation and followed by an alphanumeric"
+  (match (parse-inlines (make-paragraph "**(**foo)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "foo)")
+                            ('text text-data2 "**")
+                            ('text text-data3 "(")
+                            ('text text-data3 "**")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis restriction is appreciated with these examples"
+  (match (parse-inlines (make-paragraph "**Gomphocarpus (*Gomphocarpus physocarpus*, syn.
+*Asclepias physocarpa*)**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 ")")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "Asclepias physocarpa"))
+                                       ('text text-data3 ", syn.\n")
+                                       ('emphasis emphasis-data3
+                                                  ('text text-data4 "Gomphocarpus physocarpus"))
+                                       ('text text-data5 "Gomphocarpus ("))))
+     (and (strong? emphasis-data1)
+          (em? emphasis-data2)
+          (em? emphasis-data3)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis restriction is appreciated with these examples"
+  (match (parse-inlines (make-paragraph "**foo \"*bar*\" foo**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "\" foo")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data3 "foo \""))))
+     (and (strong? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword emphasis"
+  (match (parse-inlines (make-paragraph "**foo**bar"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "bar")
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "foo"))))
+     (strong? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not strong emphasis because the closing delimiter is preceded
+by whitespace"
+  (match (parse-inlines (make-paragraph "__foo bar __"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "__")
+                            ('text text-data2 "foo bar ")
+                            ('text text-data3 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, not strong emphasis because the second __ is preceded
+by punctuation and followed by an alphanumeric"
+  (match (parse-inlines (make-paragraph "__(__foo)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "foo)")
+                            ('text text-data2 "__")
+                            ('text text-data3 "(")
+                            ('text text-data3 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis restriction is appreciated with this examples"
+  (match (parse-inlines (make-paragraph "_(__foo__)_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 ")")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "foo"))
+                                       ('text text-data3 "("))))
+     (and (em? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "__foo__bar"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "bar")
+                            ('text text-data2 "__")
+                            ('text text-data3 "foo")
+                            ('text text-data4 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "__пристаням__стремятся"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "стремятся")
+                            ('text text-data2 "__")
+                            ('text text-data3 "пристаням")
+                            ('text text-data4 "__")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis intraword strong emphasis is forbidden with __"
+  (match (parse-inlines (make-paragraph "__foo__bar__baz__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "baz")
+                                       ('text text-data2 "__")
+                                       ('text text-data3 "bar")
+                                       ('text text-data4 "__")
+                                       ('text text-data5 "foo"))))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, strong emphasis, even though the closing delimiter is both
+left- and right-flanking, because it is followed by punctuation"
+  (match (parse-inlines (make-paragraph "__(bar)__."))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 ".")
+                            ('emphasis emphasis-data
+                                       ('text text-data2 "(bar)"))))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
