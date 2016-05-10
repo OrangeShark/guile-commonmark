@@ -599,6 +599,135 @@ left- and right-flanking, because it is followed by punctuation"
      (strong? emphasis-data))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 1)
+(test-assert "parse-inlines, emphasis any nonempty sequence of inline elements can
+be the contents of an emphasized span."
+  (match (parse-inlines (make-paragraph "*foo [bar](/url)*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data2 "foo"))))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis any nonempty sequence of inline elements can
+be the contents of an emphasized span."
+  (match (parse-inlines (make-paragraph "*foo\nbar*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data "foo\nbar"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in particular, emphasis and strong emphasis can be nested
+inside emphasis"
+  (match (parse-inlines (make-paragraph "_foo __bar__ baz_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 " baz")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data3 "bar"))
+                                       ('text text-data2 "foo "))))
+     (and (em? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in particular, emphasis and strong emphasis can be nested
+inside emphasis"
+  (match (parse-inlines (make-paragraph "_foo _bar_ baz_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 " baz")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data2 "foo "))))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in particular, emphasis and strong emphasis can be nested
+inside emphasis"
+  (match (parse-inlines (make-paragraph "__foo_ bar_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 " bar")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "foo")))))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in particular, emphasis and strong emphasis can be nested
+inside emphasis"
+  (match (parse-inlines (make-paragraph "*foo *bar**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data1 "foo "))))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in particular, emphasis and strong emphasis can be nested
+inside emphasis"
+  (match (parse-inlines (make-paragraph "*foo **bar** baz*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 " baz")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data3 "foo "))))
+     (and (em? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, internal delimiters can close emphasis"
+  (match (parse-inlines (make-paragraph "*foo**bar**baz*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "baz"))
+                            ('emphasis emphasis-data2
+                                       ('text text-data2 "bar"))
+                            ('emphasis emphasis-data3
+                                       ('text text-data3 "foo"))))
+     (and (em? emphasis-data1)
+          (em? emphasis-data2)
+          (em? emphasis-data3)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in cases with spaces, they cannot"
+  (match (parse-inlines (make-paragraph "***foo** bar*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 " bar")
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "foo")))))
+     (and (em? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, in cases with spaces, they cannot"
+  (match (parse-inlines (make-paragraph "*foo **bar***"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('emphasis emphasis-data2
+                                                  ('text text-data2 "bar"))
+                                       ('text text-data1 "foo "))))
+     (and (em? emphasis-data1)
+          (strong? emphasis-data2)))
+    (x (pk 'fail x #f))))
+
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
