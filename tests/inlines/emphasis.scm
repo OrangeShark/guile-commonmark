@@ -975,6 +975,262 @@ emphasis"
      #t)
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo ***"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "***")
+                            ('text text-data2 "foo ")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo *\\**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "*"))
+                            ('text text-data2 "foo ")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo *_*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "_"))
+                            ('text text-data2 "foo ")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo *****"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "*****")
+                            ('text text-data2 "foo ")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo **\\***"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "*"))
+                            ('text text-data2 "foo ")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11"
+  (match (parse-inlines (make-paragraph "foo **_**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "_"))
+                            ('text text-data2 "foo ")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "**foo*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "*")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "*foo**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "*")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "***foo**"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "*")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "****foo*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "***")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "**foo***"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "*")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                           ))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 11 excess literal * characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "*foo****"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "***")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                           ))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo ___"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "___")
+                            ('text text-data2 "foo ")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo _\\__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "_"))
+                            ('text text-data2 "foo ")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo _*_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "*"))
+                            ('text text-data2 "foo ")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo _____"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data1 "_____")
+                            ('text text-data2 "foo ")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo __\\___"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "_"))
+                            ('text text-data2 "foo ")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12"
+  (match (parse-inlines (make-paragraph "foo __*__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "*"))
+                            ('text text-data2 "foo ")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "__foo_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "_")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "_foo__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "_")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "___foo__"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "_")))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "____foo_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                            ('text text-data2 "___")))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "__foo___"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "_")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                           ))
+     (strong? emphasis-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 12 excess literal _ characters
+will appear outside of the emphasis"
+  (match (parse-inlines (make-paragraph "_foo____"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data2 "___")
+                            ('emphasis emphasis-data
+                                       ('text text-data1 "foo"))
+                           ))
+     (em? emphasis-data))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
