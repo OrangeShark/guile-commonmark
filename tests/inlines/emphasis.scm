@@ -1328,6 +1328,102 @@ long sequences of delimiters"
      (em? emphasis-data1))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 5)
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "*[bar*](/url)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "bar baz"))
+                            ('text text-data2 "foo ")
+                            ('text text-data3 "*")))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "_foo [bar_](/url)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "bar baz"))
+                            ('text text-data2 "foo ")
+                            ('text text-data3 "*")))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "*<img src=\"foo\" title=\"*\"/>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "bar baz"))
+                            ('text text-data2 "foo ")
+                            ('text text-data3 "*")))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "**<a href=\"**\">"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "bar baz"))
+                            ('text text-data2 "foo ")
+                            ('text text-data3 "*")))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "__<a href=\"__\">"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('text text-data1 "bar baz"))
+                            ('text text-data2 "foo ")
+                            ('text text-data3 "*")))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "*a `*`*"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('code-span code-data1 "*")
+                                       ('text text-data1 "a "))))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "_a `_`_"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('code-span code-data1 "_")
+                                       ('text text-data1 "a "))))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 2)
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "**a<http://foo.bar/?q**>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('code-span code-data1 "_")
+                                       ('text text-data1 "a "))))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, emphasis rule 17"
+  (match (parse-inlines (make-paragraph "__a<http://foo.bar/?q=__>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('emphasis emphasis-data1
+                                       ('code-span code-data1 "_")
+                                       ('text text-data1 "a "))))
+     (em? emphasis-data1))
+    (x (pk 'fail x #f))))
 
 (test-end)
 
