@@ -984,7 +984,6 @@ emphasis"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis rule 11"
   (match (parse-inlines (make-paragraph "foo *\\**"))
     (('document doc-data
@@ -1014,7 +1013,6 @@ emphasis"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis rule 11"
   (match (parse-inlines (make-paragraph "foo **\\***"))
     (('document doc-data
@@ -1110,7 +1108,6 @@ will appear outside of the emphasis"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis rule 12"
   (match (parse-inlines (make-paragraph "foo _\\__"))
     (('document doc-data
