@@ -22,6 +22,7 @@
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-26)
   #:use-module (commonmark node)
+  #:use-module (commonmark common)
   #:export (parse-inlines))
 
 (define re-start-ticks (make-regexp "^`+"))
@@ -207,6 +208,24 @@
                             delim-stack
                             nodes-stack)))))
 
+(define (ascii-punctuation-characters? ch)
+  (define ascii-punc-set (string->char-set ascii-punctuation-characters))
+  (char-set-contains? ascii-punc-set ch))
+
+(define (parse-backslash text nodes delim-stack nodes-stack)
+  (let* ((next-ch-text (text-advance text 1))
+         (next-ch (text-char next-ch-text)))
+    (cond ((char=? next-ch #\newline)
+           (parse-char (text-advance next-ch-text 1)
+                       (cons (make-hardbreak-node) nodes)
+                       delim-stack nodes-stack))
+          ((ascii-punctuation-characters? next-ch)
+           (parse-char (text-advance next-ch-text 1)
+                       (cons (make-text-node (string next-ch)) nodes)
+                       delim-stack nodes-stack))
+          (else (parse-char next-ch-text (cons (make-text-node "\\") nodes)
+                            delim-stack nodes-stack)))))
+
 (define (parse-ticks text nodes delim-stack nodes-stack)
   (let ((start-ticks (start-ticks? text)))
     (let loop ((end-ticks (end-ticks? (text-move text (match:end start-ticks 0)))))
@@ -239,6 +258,7 @@
   (if (text-end? text)
       (pop-remaining-delim nodes delim-stack nodes-stack)
       (case (text-char text)
+        ((#\\) (parse-backslash text nodes delim-stack nodes-stack))
         ((#\`) (parse-ticks text nodes delim-stack nodes-stack))
         ((#\* #\_) (parse-emphasis text nodes delim-stack nodes-stack))
         (else (parse-normal-text text nodes delim-stack nodes-stack)))))

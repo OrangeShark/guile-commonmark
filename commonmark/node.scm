@@ -53,6 +53,8 @@
             text-node?
             make-softbreak-node
             softbreak-node?
+            make-hardbreak-node
+            hardbreak-node?
             make-blank-node
             blank-node?
             make-code-span-node
@@ -81,6 +83,7 @@
 ;; - 'heading
 ;; - 'text
 ;; - 'softbreak
+;; - 'hardbreak
 ;; - 'blank
 ;; - 'code-span
 ;; - 'emphasis
@@ -250,6 +253,13 @@
 
 (define (softbreak-node? n)
   (node-type? n 'softbreak))
+
+;; Hardbreak node
+(define (make-hardbreak-node)
+  (make-node 'hardbreak '((closed . #t))))
+
+(define (hardbreak-node? n)
+  (node-type? n 'hardbreak))
 
 ;; Blank node
 (define (make-blank-node)
