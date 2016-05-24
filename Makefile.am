@@ -25,7 +25,8 @@ TESTS =	                                       \
   tests/blocks/setext-headings.scm             \
   tests/blocks/thematic-breaks.scm             \
   tests/inlines/code-spans.scm                 \
-  tests/inlines/emphasis.scm
+  tests/inlines/emphasis.scm                   \
+  tests/inlines/backslash-escape.scm
 
 TEST_EXTENSIONS = .scm
 
