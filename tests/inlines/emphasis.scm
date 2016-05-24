@@ -373,13 +373,13 @@ is followed by whitespace"
      #t)
     (x (pk 'fail x #f))))
 
-(test-assert "parse-inlines, emphasis not strong emphasis because newline counts as whitespace 
-is followed by whitespace"
+(test-assert "parse-inlines, emphasis not strong emphasis because newline counts as whitespace"
   (match (parse-inlines (make-paragraph "__\nfoo bar__"))
     (('document doc-data
                 ('paragraph para-data
                             ('text text-data1 "__")
-                            ('text text-data2 "\nfoo bar")
+                            ('text text-data2 "foo bar")
+                            ('softbreak break-data)
                             ('text text-data3 "__")))
      #t)
     (x (pk 'fail x #f))))
@@ -485,7 +485,8 @@ by punctuation and followed by an alphanumeric"
                                        ('text text-data1 ")")
                                        ('emphasis emphasis-data2
                                                   ('text text-data2 "Asclepias physocarpa"))
-                                       ('text text-data3 ", syn.\n")
+                                       ('softbreak break-data)
+                                       ('text text-data3 ", syn.")
                                        ('emphasis emphasis-data3
                                                   ('text text-data4 "Gomphocarpus physocarpus"))
                                        ('text text-data5 "Gomphocarpus ("))))
@@ -616,7 +617,9 @@ be the contents of an emphasized span."
     (('document doc-data
                 ('paragraph para-data
                             ('emphasis emphasis-data
-                                       ('text text-data "foo\nbar"))))
+                                       ('text text-data "bar")
+                                       ('softbreak break-data)
+                                       ('text text-data "foo"))))
      (em? emphasis-data))
     (x (pk 'fail x #f))))
 
@@ -812,7 +815,9 @@ contents of a strongly emphasized span"
     (('document doc-data
                 ('paragraph para-data
                             ('emphasis emphasis-data
-                                       ('text text-data "foo\nbar"))))
+                                       ('text text-data "bar")
+                                       ('softbreak break-data)
+                                       ('text text-data "foo"))))
      (strong? emphasis-data))
     (x (pk 'fail x #f))))
 
@@ -929,7 +934,8 @@ emphasis"
                             ('emphasis emphasis-data1
                                        ('text text-data5 " bop")
                                        ('emphasis emphasis-data2
-                                                  ('text text-data4 "\nbim")
+                                                  ('text text-data4 "bim")
+                                                  ('softbreak break-data)
                                                   ('emphasis emphasis-data3
                                                              ('text text-data3 "baz"))
                                                   ('text text-data1 "bar "))
@@ -1137,7 +1143,6 @@ will appear outside of the emphasis"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis rule 12"
   (match (parse-inlines (make-paragraph "foo __\\___"))
     (('document doc-data

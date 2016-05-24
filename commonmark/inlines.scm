@@ -27,7 +27,7 @@
 
 (define re-start-ticks (make-regexp "^`+"))
 (define re-ticks (make-regexp "`+"))
-(define re-main (make-regexp "^[^`*_\\]+"))
+(define re-main (make-regexp "^[^`*_\\\n]+"))
 
 (define (start-ticks? text)
   (regexp-exec re-start-ticks (text-value text) (text-position text)))
@@ -212,6 +212,11 @@
   (define ascii-punc-set (string->char-set ascii-punctuation-characters))
   (char-set-contains? ascii-punc-set ch))
 
+(define (parse-newline text nodes delim-stack nodes-stack)
+  (parse-char (text-advance text 1)
+              (cons (make-softbreak-node) nodes)
+              delim-stack nodes-stack))
+
 (define (parse-backslash text nodes delim-stack nodes-stack)
   (let* ((next-ch-text (text-advance text 1))
          (next-ch (and (not (text-end? next-ch-text)) (text-char next-ch-text))))
@@ -258,6 +263,7 @@
   (if (text-end? text)
       (pop-remaining-delim nodes delim-stack nodes-stack)
       (case (text-char text)
+        ((#\newline) (parse-newline text nodes delim-stack nodes-stack))
         ((#\\) (parse-backslash text nodes delim-stack nodes-stack))
         ((#\`) (parse-ticks text nodes delim-stack nodes-stack))
         ((#\* #\_) (parse-emphasis text nodes delim-stack nodes-stack))
