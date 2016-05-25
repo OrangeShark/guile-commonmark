@@ -45,6 +45,8 @@
         ((text-node? n) (text-node->sxml n))
         ((code-span-node? n) (code-span-node->sxml n))
         ((softbreak-node? n) (softbreak-node->sxml n))
+        ((hardbreak-node? n) (hardbreak-node->sxml n))
+        ((emphasis-node? n) (emphasis-node->sxml n))
         (else (error "unknown node"))))
 
 (define (thematic-break-node->sxml n)
@@ -83,8 +85,18 @@
   `(li ,@(fold-nodes node->sxml (node-children n))))
 
 (define (softbreak-node->sxml n)
-  "
-")
+  "\n")
+
+(define (hardbreak-node->sxml n)
+  '(br))
+
+(define (emphasis-type n)
+  (case (assq-ref (node-data n) 'type)
+    ((em) 'em)
+    (else 'strong)))
+
+(define (emphasis-node->sxml n)
+  `(,(emphasis-type n) ,@(fold-nodes node->sxml (node-children n))))
 
 (define (infostring s)
   (let ((language (string-trim-both s)))
