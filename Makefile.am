@@ -27,7 +27,8 @@ TESTS =	                                       \
   tests/inlines/code-spans.scm                 \
   tests/inlines/emphasis.scm                   \
   tests/inlines/backslash-escape.scm           \
-  tests/inlines/softbreak.scm
+  tests/inlines/softbreak.scm                  \
+  tests/inlines/hardbreak.scm
 
 TEST_EXTENSIONS = .scm
 

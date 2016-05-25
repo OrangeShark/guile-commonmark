@@ -215,12 +215,11 @@
   (define ascii-punc-set (string->char-set ascii-punctuation-characters))
   (char-set-contains? ascii-punc-set ch))
 
-(define (blank-trailing-space? node)
+(define* (blank-trailing-space? node #:optional (offset 1))
   (let ((str (last-child node)))
-    (case (string-ref str (- (string-length str) 1))
+    (case (string-ref str (- (string-length str) offset))
       ((#\space) #t)
       (else #f))))
-
 
 (define (remove-trailing-space nodes)
   (let ((str (last-child (car nodes))))
@@ -231,7 +230,10 @@
   (let ((new-text (text-advance-skip (text-advance text 1) #\space)))
     (if (and (not (null? nodes)) (text-node? (car nodes)) (blank-trailing-space? (car nodes)))
         (parse-char new-text
-                    (cons (make-softbreak-node) (remove-trailing-space nodes))
+                    (cons (if (blank-trailing-space? (car nodes) 2)
+                              (make-hardbreak-node)
+                              (make-softbreak-node))
+                          (remove-trailing-space nodes))
                     delim-stack nodes-stack)
         (parse-char new-text
                     (cons (make-softbreak-node) nodes)
@@ -241,7 +243,7 @@
   (let* ((next-ch-text (text-advance text 1))
          (next-ch (and (not (text-end? next-ch-text)) (text-char next-ch-text))))
     (cond ((eq? next-ch #\newline)
-           (parse-char (text-advance next-ch-text 1)
+           (parse-char (text-advance-skip (text-advance next-ch-text 1) #\space)
                        (cons (make-hardbreak-node) nodes)
                        delim-stack nodes-stack))
           ((and next-ch (ascii-punctuation-characters? next-ch))
@@ -274,7 +276,7 @@
 
 (define (pop-remaining-delim nodes delim-stack nodes-stack)
   (if (null? delim-stack)
-      nodes
+      (if (text-node? (car nodes)) (remove-trailing-space nodes) nodes)
       (pop-remaining-delim (append nodes (cons (delim->text (car delim-stack)) (car nodes-stack)))
                            (cdr delim-stack)
                            (cdr nodes-stack))))
