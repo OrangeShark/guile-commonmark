@@ -39,6 +39,17 @@
      #t)
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, spaces at the end of the line and beginning of
+the next line are removed"
+  (match (parse-inlines (make-paragraph "foo \n baz"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "baz")
+                            ('softbreak break-data)
+                            ('text text-data "foo")))
+     #t)
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))

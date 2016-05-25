@@ -56,6 +56,9 @@
 (define (text-advance text increment)
   (make-text (text-value text) (+ (text-position text) increment)))
 
+(define (text-advance-skip text char-pred)
+  (make-text (text-value text) (string-skip (text-value text) char-pred (text-position text))))
+
 (define (text-substring text start end)
   (substring (text-value text) start end))
 
@@ -212,10 +215,27 @@
   (define ascii-punc-set (string->char-set ascii-punctuation-characters))
   (char-set-contains? ascii-punc-set ch))
 
+(define (blank-trailing-space? node)
+  (let ((str (last-child node)))
+    (case (string-ref str (- (string-length str) 1))
+      ((#\space) #t)
+      (else #f))))
+
+
+(define (remove-trailing-space nodes)
+  (let ((str (last-child (car nodes))))
+    (cons (make-text-node (string-trim-right str #\space))
+          (cdr nodes))))
+
 (define (parse-newline text nodes delim-stack nodes-stack)
-  (parse-char (text-advance text 1)
-              (cons (make-softbreak-node) nodes)
-              delim-stack nodes-stack))
+  (let ((new-text (text-advance-skip (text-advance text 1) #\space)))
+    (if (and (not (null? nodes)) (text-node? (car nodes)) (blank-trailing-space? (car nodes)))
+        (parse-char new-text
+                    (cons (make-softbreak-node) (remove-trailing-space nodes))
+                    delim-stack nodes-stack)
+        (parse-char new-text
+                    (cons (make-softbreak-node) nodes)
+                    delim-stack nodes-stack))))
 
 (define (parse-backslash text nodes delim-stack nodes-stack)
   (let* ((next-ch-text (text-advance text 1))
