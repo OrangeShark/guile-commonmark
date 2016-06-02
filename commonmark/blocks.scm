@@ -24,20 +24,11 @@
   #:use-module (commonmark common)
   #:export (parse-blocks))
 
-;; ']' needs to be the first character after an openning '[' to be able
-;; to match ']'
-(define escaped-characters (string-append "\\\\[" ascii-punctuation-characters "]"))
-(define regular-characters "[^\x01-\x19 ()\\\\]")
-(define in-parens-no-space (string-append "\\((" regular-characters "|" escaped-characters "|\\\\)*\\)"))
+
 (define link-label (string-append "\\[(([^][]|"
                                      escaped-characters
                                      "){1,1000})\\]"))
-(define link-destination (string-append "((" regular-characters "+|"
-                                        escaped-characters "|"
-                                        "\\\\|"
-                                        in-parens-no-space ")+)"))
-(define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
-                                  "'(" escaped-characters "|[^'])*'))"))
+
 
 (define re-thematic-break (make-regexp "^ {0,3}((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))

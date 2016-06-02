@@ -61,6 +61,8 @@
             code-span-node?
             make-emphasis-node
             emphasis-node?
+            make-link-node
+            link-node?
             child-closed?
             close-node
             last-child
@@ -87,6 +89,7 @@
 ;; - 'blank
 ;; - 'code-span
 ;; - 'emphasis
+;; - 'link
 ;; interp. The type of CommonMark block node
 
 ;; Node is (make-node Node-Type Node-Data (listof Node))
@@ -283,6 +286,14 @@
 
 (define (emphasis-node? node)
   (node-type? node 'emphasis))
+
+;; Link node
+(define (make-link-node nodes destination title)
+  (make-node 'link `((destination . ,destination)
+                     (title . ,title)) nodes))
+
+(define (link-node? node)
+  (node-type? node 'link))
 
 (define (child-closed? n)
   (node-closed? (last-child n)))

@@ -19,6 +19,7 @@
   #:use-module (ice-9 match)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-2)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-11)
   #:use-module (srfi srfi-26)
@@ -29,6 +30,11 @@
 (define re-start-ticks (make-regexp "^`+"))
 (define re-ticks (make-regexp "`+"))
 (define re-main (make-regexp "^[^`*_\\\n]+"))
+(define re-link-destination-brackets (make-regexp (string-append "^<(([^ <>\n\t\\]|"
+                                                                 escaped-characters
+                                                                 ")*)>")))
+(define re-link-destination (make-regexp link-destination))
+(define re-link-title (make-regexp link-title))
 
 (define (start-ticks? text)
   (regexp-exec re-start-ticks (text-value text) (text-position text)))
@@ -38,6 +44,19 @@
 
 (define (normal-text? text)
   (regexp-exec re-main (text-value text) (text-position text)))
+
+(define (link-destination-brackets? text)
+  (regexp-exec re-link-destination-brackets (text-value text) (text-position text)))
+
+(define (link-destination-normal? text)
+  (regexp-exec re-link-destination (text-value text) (text-position text)))
+
+(define (link-destination? text)
+  (or (link-destination-brackets? text)
+      (link-destination-normal? text)))
+
+(define (link-title? text)
+  (regexp-exec re-link-title (text-value text) (text-position text)))
 
 (define (match-length match)
   (string-length (match:substring match 0)))
@@ -58,7 +77,8 @@
   (make-text (text-value text) (+ (text-position text) increment)))
 
 (define (text-advance-skip text char-pred)
-  (make-text (text-value text) (string-skip (text-value text) char-pred (text-position text))))
+  (make-text (text-value text) (or (string-skip (text-value text) char-pred (text-position text))
+                                   (text-position text))))
 
 (define (text-substring text start end)
   (substring (text-value text) start end))
@@ -295,6 +315,72 @@
     (parse-char (text-move text pos) (cons node nodes)
                 delim-stack)))
 
+(define (link-text? text)
+  (and (eq? (text-char text) #\[)
+       (let loop ((text (text-advance text 1))
+                  (open-bracket-count 1))
+         (and (not (text-end? text))
+              (case (text-char text)
+                ((#\[) (and (not (link? text))
+                            (loop (text-advance text 1) (+ open-bracket-count 1))))
+                ((#\]) (if (= open-bracket-count 1)
+                           (text-advance text 1)
+                           (loop (text-advance text 1) (- open-bracket-count 1))))
+                ((#\`) (loop (text-move text (parse-ticks text)) open-bracket-count))
+                ((#\\) (loop (text-advance text 2) open-bracket-count))
+                (else (loop (text-advance text 1) open-bracket-count)))))))
+
+
+(define (link? text)
+  (define* (make-link link-text #:optional (dest-match #f) (title-match #f))
+    (let* ((link-text (text-substring text (+ (text-position text) 1) (- (text-position link-text) 1)))
+           (link-text-nodes (parse-char (make-text link-text 0) '() (make-empty-delim-stack))))
+    (make-link-node link-text-nodes
+                    (if dest-match (match:substring dest-match 1) "")
+                    (and title-match (remove-quotes (match:substring title-match 1))))))
+  (define (parse-title link-text dest-match after-space whitespace)
+    (let ((title-match (link-title? after-space)))
+      (cond ((and title-match whitespace)
+             (let* ((new-text (text-move after-space (match:end title-match 0)))
+                    (after-space (text-advance-skip new-text char-set:whitespace)))
+               (if (and (not (text-end? after-space)) (char=? #\) (text-char after-space)))
+                   (values (make-link link-text dest-match title-match) (text-advance after-space 1))
+                   (values #f (text-advance text 1)))))
+            ((text-end? after-space)
+             (values #f (text-advance text 1)))
+            ((char=? (text-char after-space) #\))
+             (values (make-link link-text dest-match) (text-advance after-space 1)))
+            (else (values #f (text-advance text 1))))))
+  (define (inline-link? link-text)
+    (let* ((after-space (text-advance-skip (text-advance link-text 1) char-set:whitespace))
+           (dest-match (link-destination? after-space)))
+      (cond (dest-match
+             (let* ((new-text (text-move link-text (match:end dest-match 0)))
+                    (whitespace (and (not (text-end? new-text)) (char=? (text-char new-text) #\space)))
+                    (after-space (text-advance-skip new-text char-set:whitespace)))
+               (parse-title link-text dest-match after-space whitespace)))
+            ((text-end? after-space)
+             (values #f (text-advance text 1)))
+            ((char=? (text-char after-space) #\))
+             (values (make-link link-text) (text-advance after-space 1)))
+            (else (parse-title link-text #f after-space #t)))))
+  (let ((link-text (link-text? text)))
+    (cond ((and link-text (not (text-end? link-text)) (char=? #\( (text-char link-text)))
+           (inline-link? link-text))
+          (else (values #f (text-advance text 1))))))
+
+(define (parse-link text nodes delim-stack)
+  (let-values (((link text) (link? text)))
+    (if link
+        (parse-char text (cons link nodes) delim-stack)
+        (parse-char text (cons (make-text-node "[") nodes) delim-stack))))
+
+(define (parse-normal-text text nodes delim-stack)
+  (let ((normal-text (normal-text? text)))
+    (parse-char (text-move text (match:end normal-text 0))
+                (cons (make-text-node (match:substring normal-text 0)) nodes)
+                delim-stack)))
+
 (define (parse-normal-text text nodes delim-stack)
   (let ((normal-text (normal-text? text)))
     (parse-char (text-move text (match:end normal-text 0))
@@ -316,6 +402,7 @@
         ((#\\) (parse-backslash text nodes delim-stack))
         ((#\`) (parse-code-span text nodes delim-stack))
         ((#\* #\_) (parse-emphasis text nodes delim-stack))
+        ((#\[) (parse-link text nodes delim-stack))
         (else (parse-normal-text text nodes delim-stack)))))
 
 (define (parse-inline node)

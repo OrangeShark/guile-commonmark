@@ -16,8 +16,27 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark common) 
-  #:export (ascii-punctuation-characters))
+  #:export (ascii-punctuation-characters
+            escaped-characters
+            regular-characters
+            in-parens-no-space
+            link-destination
+            link-title
+            remove-quotes))
 
 ;; ']' needs to be the first character after an openning '[' to be able
 ;; to match ']'
 (define ascii-punctuation-characters "]!\"#$%&'()*+,-./:;<=>?@[\\^_`{|}~")
+(define escaped-characters (string-append "\\\\[" ascii-punctuation-characters "]"))
+(define regular-characters "[^\x01-\x19 ()\\\\]")
+(define in-parens-no-space (string-append "\\((" regular-characters "|" escaped-characters "|\\\\)*\\)"))
+(define link-destination (string-append "((" regular-characters "+|"
+                                        escaped-characters "|"
+                                        "\\\\|"
+                                        in-parens-no-space ")+)"))
+(define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
+                                  "'(" escaped-characters "|[^'])*'))"))
+
+
+(define (remove-quotes str)
+  (substring str 1 (- (string-length str) 1)))
