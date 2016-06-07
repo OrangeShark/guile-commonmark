@@ -121,7 +121,8 @@
                             ('code-span code-data
                                         "link](/foo")
                             ('text text-data
-                                   "[not a ")))
+                                   "not a ")
+                            ('text text-data "[")))
      #t)
     (x (pk 'fail x #f))))
 
