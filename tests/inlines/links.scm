@@ -316,6 +316,66 @@ references may be used in titles"
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, link but it is not allowed between the link text and
+the following parenthesis"
+  (match (parse-inlines (make-paragraph "[link] (/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "link] (/uri)")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-paragraph "[link [foo [bar]]](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar]]")
+                                   ('text text-data "[")
+                                   ('text text-data "foo ")
+                                   ('text text-data "[")
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-paragraph "[link] bar](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "link] bar](/uri)")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-paragraph "[link [bar](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('text text-data "link ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-paragraph "[link \\[bar](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar")
+                                   ('text text-data "[")
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
 
 (test-end)
 
