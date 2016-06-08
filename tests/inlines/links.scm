@@ -128,6 +128,98 @@ pointy brackets"
           (link-title=? link-data #f)))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, link one level of balanced parentheses is allowed without escaping"
+  (match (parse-inlines (make-paragraph "[link]((foo)and(bar))"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "(foo)and(bar)")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link if you have parentheses within parentheses, you need to
+escape or use the <...> form"
+  (match (parse-inlines (make-paragraph "[link](foo(and(bar)))"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "link](foo(and(bar)))")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link if you have parentheses within parentheses, you need to
+escape or use the <...> form"
+  (match (parse-inlines (make-paragraph "[link](foo(and\\(bar\\)))"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "foo(and\\(bar\\))")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link if you have parentheses within parentheses, you need to
+escape or use the <...> form"
+  (match (parse-inlines (make-paragraph "[link](<foo(and(bar))>)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "foo(and(bar))")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link parentheses and other symbols can also be escaped"
+  (match (parse-inlines (make-paragraph "[link](foo\\)\\:)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "foo\\)\\:")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link can contain fragment identifiers and queries"
+  (match (parse-inlines (make-paragraph "[link](#fragment)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "#fragment")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link can contain fragment identifiers and queries"
+  (match (parse-inlines (make-paragraph "[link](http://example.com#fragment)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "http://example.com#fragment")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link can contain fragment identifiers and queries"
+  (match (parse-inlines (make-paragraph "[link](http://example.com?foo=3#frag)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "http://example.com?foo=3#frag")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link backslash before a non-escapable character is just
+a backslash"
+  (match (parse-inlines (make-paragraph "[link](foo\\bar)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "foo\\bar")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
 
 (test-end)
 

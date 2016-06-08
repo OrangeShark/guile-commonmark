@@ -32,6 +32,7 @@
 (define in-parens-no-space (string-append "\\((" regular-characters "|" escaped-characters "|\\\\)*\\)"))
 (define link-destination (string-append "((" regular-characters "+|"
                                         escaped-characters "|"
+                                        "[\\][^() \t\v\f\r\n]|"
                                         in-parens-no-space ")+)"))
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
                                   "'(" escaped-characters "|[^'])*'))"))
