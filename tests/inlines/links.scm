@@ -221,6 +221,102 @@ a backslash"
           (link-title=? link-data #f)))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 2)
+(test-assert "parse-inlines, link url-escaping should be left alone and entity and
+numerical character references in the destination will be parsed into the corresponding
+Unicode code points"
+  (match (parse-inlines (make-paragraph "[link](foo%20b&auml;)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "foo%20b%C3%A4")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link titles can often be parsed as destinations, if you
+try to omit the destination and keep the title, you'll get unexpected results"
+  (match (parse-inlines (make-paragraph "[link](\"title\")"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "%22title%22")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link titles may be in double quotes"
+  (match (parse-inlines (make-paragraph "[link](/url \"title\")"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link titles may be in single quotes"
+  (match (parse-inlines (make-paragraph "[link](/url 'title')"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 2)
+(test-assert "parse-inlines, link titles may be in parentheses"
+  (match (parse-inlines (make-paragraph "[link](/url (title))"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link backslash escapes and entity and numeric character
+references may be used in titles"
+  (match (parse-inlines (make-paragraph "[link](/url \"title \\\"&quot;\")"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title &quot;&quot;")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link nested balanced quotes are not allowed without escaping"
+  (match (parse-inlines (make-paragraph "[link](/url \"title \"and\" title\")"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "link](/url \"title \"and\" title\")")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link but it is easy to work around this by using a different quote type"
+  (match (parse-inlines (make-paragraph "[link](/url 'title \"and\" title')"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title \"and\" title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link whitespace is allowed around the destination and title"
+  (match (parse-inlines (make-paragraph "[link](   /url\n  \"title\"  )"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                       ('text text-data "link"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))

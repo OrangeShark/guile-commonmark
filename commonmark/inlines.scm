@@ -356,7 +356,7 @@
            (dest-match (link-destination? after-space)))
       (cond (dest-match
              (let* ((new-text (text-move link-text (match:end dest-match 0)))
-                    (whitespace (and (not (text-end? new-text)) (char=? (text-char new-text) #\space)))
+                    (whitespace (and (not (text-end? new-text)) (char-whitespace? (text-char new-text))))
                     (after-space (text-advance-skip new-text char-set:whitespace)))
                (parse-title link-text dest-match after-space whitespace)))
             ((text-end? after-space)
