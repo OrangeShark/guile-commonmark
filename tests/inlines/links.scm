@@ -377,6 +377,164 @@ unbalanced ones, unless they are escaped"
           (link-title=? link-data #f)))
     (x (pk 'fail x #f))))
 
+(define (em? node-data)
+  (eq? (assq-ref node-data 'type) 'em))
+
+(define (strong? node-data)
+  (eq? (assq-ref node-data 'type) 'strong))
+
+(test-assert "parse-inlines, link text may contain inline content"
+  (match (parse-inlines (make-paragraph "[link *foo **bar** `#`*](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('emphasis em-data1
+                                              ('code-span code-data "#")
+                                              ('text text-data " ")
+                                              (emphasis em-data2
+                                                        ('text text-data "bar"))
+                                              ('text text-data "foo "))
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)
+          (em? em-data1)
+          (strong? em-data2)))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, link text may contain inline content"
+  (match (parse-inlines (make-paragraph "[![moon](moon.jpg)](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, links may not contain other links at any level of nesting"
+  (match (parse-inlines (make-paragraph "[foo [bar](/uri)](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "](/uri)")
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('text text-data "foo ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, links may not contain other links at any level of nesting"
+  (match (parse-inlines (make-paragraph "[foo *[bar [baz](/uri)](/uri)*](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "](/uri)")
+                            ('emphasis em-data
+                                       ('text text-data "](/uri)")
+                                       ('link link-data
+                                              ('text text-data "baz"))
+                                       ('text text-data "bar ")
+                                       ('text text-data "["))
+                            ('text text-data "foo ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, links may not contain other links at any level of nesting"
+  (match (parse-inlines (make-paragraph "![[[foo](/uri1)](uri2)](/uri3)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "](/uri)")
+                            ('link link-data
+                                   ('text text-data "baz"))
+                            ('text text-data "bar ")
+                            ('text text-data "[")
+                            ('text text-data "foo ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text have higher precedence over emphasis"
+  (match (parse-inlines (make-paragraph "*[foo*](/uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "*")
+                                   ('text text-data "foo"))
+                            ('text text-data "*")))
+     (and (link-destination=? link-data "/uri")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link text have higher precedence over emphasis"
+  (match (parse-inlines (make-paragraph "[foo *bar](baz*)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar")
+                                   ('text text-data "*")
+                                   ('text text-data "foo "))))
+     (and (link-destination=? link-data "baz*")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, brackets that aren't part of links do not take
+precedence"
+  (match (parse-inlines (make-paragraph "*foo [bar* baz]"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data " baz]")
+                            ('emphasis em-data
+                                   ('text text-data "bar")
+                                   ('text text-data "[")
+                                   ('text text-data "foo "))))
+     (em? em-data))
+    (x (pk 'fail x #f))))
+
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, link these cases illustrate the precedence of HTML,
+tags, code spans, and autolinks over link grouping"
+  (match (parse-inlines (make-paragraph "[foo <bar attr=\"](baz)\">"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data " baz]")
+                            ('emphasis em-data
+                                   ('text text-data "bar")
+                                   ('text text-data "[")
+                                   ('text text-data "foo "))))
+     (em? em-data))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, link these cases illustrate the precedence of HTML,
+tags, code spans, and autolinks over link grouping"
+  (match (parse-inlines (make-paragraph "[foo`](/uri)`"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('code-span code-data "](/uri)")
+                            ('text text-data "foo")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, link these cases illustrate the precedence of HTML,
+tags, code spans, and autolinks over link grouping"
+  (match (parse-inlines (make-paragraph "[foo<http://example.com/?search=](uri)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('code-span code-data "](/uri)")
+                            ('text text-data "foo")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
