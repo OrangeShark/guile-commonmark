@@ -47,6 +47,7 @@
         ((softbreak-node? n) (softbreak-node->sxml n))
         ((hardbreak-node? n) (hardbreak-node->sxml n))
         ((emphasis-node? n) (emphasis-node->sxml n))
+        ((link-node? n) (link-node->sxml n))
         (else (error "unknown node"))))
 
 (define (thematic-break-node->sxml n)
@@ -97,6 +98,18 @@
 
 (define (emphasis-node->sxml n)
   `(,(emphasis-type n) ,@(fold-nodes node->sxml (node-children n))))
+
+(define (destination node)
+  (assq-ref (node-data node) 'destination))
+
+(define (title node)
+  (assq-ref (node-data node) 'title))
+
+(define (link-node->sxml node)
+  (let ((dest (destination node))
+        (title (title node)))
+    `(a (@ (href ,dest) ,@(if title (list (list 'title title)) '()))
+        ,@(fold-nodes node->sxml (node-children node)))))
 
 (define (infostring s)
   (let ((language (string-trim-both s)))
