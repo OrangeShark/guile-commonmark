@@ -265,7 +265,6 @@ try to omit the destination and keep the title, you'll get unexpected results"
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-inlines, link titles may be in parentheses"
   (match (parse-inlines (make-paragraph "[link](/url (title))"))
     (('document doc-data
@@ -276,6 +275,7 @@ try to omit the destination and keep the title, you'll get unexpected results"
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 1)
 (test-assert "parse-inlines, link backslash escapes and entity and numeric character
 references may be used in titles"
   (match (parse-inlines (make-paragraph "[link](/url \"title \\\"&quot;\")"))

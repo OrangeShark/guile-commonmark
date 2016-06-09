@@ -35,7 +35,8 @@
                                         "[\\][^() \t\v\f\r\n]|"
                                         in-parens-no-space ")+)"))
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
-                                  "'(" escaped-characters "|[^'])*'))"))
+                                  "'(" escaped-characters "|[^'])*'|"
+                                  "\\((" escaped-characters "|[^)])*\\)))"))
 
 
 (define (remove-quotes str)
