@@ -386,7 +386,8 @@
              (let* ((label (match:substring label-match 1))
                     (reference (ref-proc label)))
                (if reference
-                   (make-link link-text (car reference) (cadr reference))
+                   (values (make-link link-text (car reference) (cadr reference))
+                           (text-move link-text (match:end label-match 0)))
                    (values #f (text-advance text 1)))))
             (else (values #f (text-advance text 1))))))
   (let ((link-text (link-text? text ref-proc)))
