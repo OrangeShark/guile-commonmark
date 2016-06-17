@@ -22,6 +22,7 @@
             in-parens-no-space
             link-destination
             link-title
+            link-label
             remove-quotes))
 
 ;; ']' needs to be the first character after an openning '[' to be able
@@ -37,7 +38,9 @@
 (define link-title (string-append "((\"(" escaped-characters "|[^\"])*\"|"
                                   "'(" escaped-characters "|[^'])*'|"
                                   "\\((" escaped-characters "|[^)])*\\)))"))
-
+(define link-label (string-append "\\[(([^][]|"
+                                     escaped-characters
+                                     "){1,1000})\\]"))
 
 (define (remove-quotes str)
   (substring str 1 (- (string-length str) 1)))

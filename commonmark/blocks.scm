@@ -25,11 +25,6 @@
   #:export (parse-blocks))
 
 
-(define link-label (string-append "\\[(([^][]|"
-                                     escaped-characters
-                                     "){1,1000})\\]"))
-
-
 (define re-thematic-break (make-regexp "^ {0,3}((\\* *){3,}|(_ *){3,}|(- *){3,}) *$"))
 (define re-block-quote (make-regexp "^ {0,3}> ?"))
 (define re-atx-heading (make-regexp "^ {0,3}(#{1,6})( .*)?$"))
