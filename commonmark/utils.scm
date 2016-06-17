@@ -17,24 +17,19 @@
 
 (define-module (commonmark utils)
   #:use-module (ice-9 rdelim)
-  #:export (map&co
+  #:export (filter-map&co
             expand-tabs
             read-tabless-line))
 
 
-;; f: (a k' -> d)
-;; k': b (listof c) -> d
-;; l: (listof a)
-;; k: (listof b) (listof c) -> d
-;; f l k -> d
-(define (map&co f l k)
-  "like map but uses a continuation to collect an extra list of values"
+(define (filter-map&co f l k)
+  "like filter-map but uses a continuation to collect an extra list of values"
   (if (null? l)
       (k '() '())
       (f (car l) (lambda (v d)
-                   (map&co f (cdr l)
-                           (lambda (v2 d2)
-                             (k (cons v v2) (append d d2))))))))
+                   (filter-map&co f (cdr l)
+                                  (lambda (v2 d2)
+                                    (k (if v (cons v v2) v2) (append d d2))))))))
 
 
 ;; String -> String

@@ -31,9 +31,7 @@
              (match (call-with-input-string "[foo]: /url \"title\"\n\n[foo]" parse-blocks)
                (('document doc-data
                            ('paragraph para-data1
-                                       ('text text-data1 "[foo]"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "")))
+                                       ('text text-data1 "[foo]")))
                 (any (cut equal? '("foo" "/url" "\"title\"")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
@@ -42,9 +40,7 @@
                      "   [foo]: \n       /url  \n          'the title'  \n\n[foo]" parse-blocks)
                (('document doc-data
                            ('paragraph para-data1
-                                       ('text text-data1 "[foo]"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "")))
+                                       ('text text-data1 "[foo]")))
                 (any (cut equal? '("foo" "/url" "'the title'")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
@@ -53,9 +49,7 @@
                      "[Foo*bar\\]]:my_(url) 'title (with parens)'\n\n[Foo*bar\\]]" parse-blocks)
                (('document doc-data
                            ('paragraph para-data1
-                                       ('text text-data1 "[Foo*bar\\]]"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "")))
+                                       ('text text-data1 "[Foo*bar\\]]")))
                 (any (cut equal? '("Foo*bar\\]" "my_(url)" "'title (with parens)'")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
@@ -65,9 +59,7 @@
                      "[foo]: /url '\ntitle\nline1\nline2\n'\n\n[foo]" parse-blocks)
                (('document doc-data
                            ('paragraph para-data1
-                                       ('text text-data1 "[foo]"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "")))
+                                       ('text text-data1 "[foo]")))
                 (any (cut equal? '("foo" "/url" "'\ntitle\nline1\nline2\n'")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
@@ -89,9 +81,7 @@
              (match (call-with-input-string "[foo]:\n/url\n\n[foo]" parse-blocks)
                (('document doc-data
                            ('paragraph para-data1
-                                       ('text text-data1 "[foo]"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "")))
+                                       ('text text-data1 "[foo]")))
                 (any (cut equal? '("foo" "/url" #f)  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
@@ -130,8 +120,6 @@
                            ('block-quote quote-data
                                          ('paragraph para-data1
                                                      ('text text-data1 "bar")))
-                           ('paragraph para-data2
-                                       ('text text-data2 ""))
                            ('heading heading-data
                                     ('text text-data3 "[Foo]")))
                 (any (cut equal? '("foo" "/url" #f) <>) (link-references doc-data)))
@@ -139,10 +127,16 @@
 
 (test-assert "parse-blocks, link reference definition several can occur one after another"
              (match (call-with-input-string
-                     "[foo]: /foo-url \"foo\"\n[bar]: /bar-url\n  \"bar\"\n[baz]: /baz-url" parse-blocks)
+                        (string-append "[foo]: /foo-url \"foo\"\n"
+                                       "[bar]: /bar-url\n"
+                                       "  \"bar\"\n"
+                                       "[baz]: /baz-url\n\n"
+                                       "[foo],\n"
+                                       "[bar],\n"
+                                       "[baz]") parse-blocks)
                (('document doc-data
                            ('paragraph para-data
-                                       ('text text-data "")))
+                                       ('text text-data "[foo],\n[bar],\n[baz]")))
                 (let ((links (link-references doc-data)))
                   (and (any (cut equal? '("foo" "/foo-url" "\"foo\"") <>) links)
                        (any (cut equal? '("bar" "/bar-url" "\"bar\"") <>) links)
@@ -152,9 +146,7 @@
 (test-assert "parse-blocks, link reference definition can occur in block container elements"
              (match (call-with-input-string "[foo]\n\n> [foo]: /url" parse-blocks)
                (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "")))
+                           ('block-quote quote-data)
                            ('paragraph para-data1
                                        ('text text-data1 "[foo]")))
                 (any (cut equal? '("foo" "/url" #f) <>) (link-references doc-data)))
