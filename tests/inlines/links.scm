@@ -657,6 +657,79 @@ at any level of nesting"
           (em? em-data)))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, full reference link text precedence over emphasis grouping"
+  (match (parse-inlines (make-document "*[foo*][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "*")
+                                   ('text text-data "foo"))
+                            ('text text-data "*")))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link text precedence over emphasis grouping"
+  (match (parse-inlines (make-document "[foo *bar][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar")
+                                   ('text text-data "*")
+                                   ('text text-data "foo "))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link text precedence lower than HTML tags,
+code spans, and autolinks"
+  (match (parse-inlines (make-document "[foo <bar attr=\"][ref]\">"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar")
+                                   ('text text-data "*")
+                                   ('text text-data "foo "))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link text precedence lower than HTML tags,
+code spans, and autolinks"
+  (match (parse-inlines (make-document "[foo`][ref]`"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('code-span code-data "][ref]")
+                            ('text text-data "foo")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link text precedence lower than HTML tags,
+code spans, and autolinks"
+  (match (parse-inlines (make-document "[foo<http://example.com/?search=][ref]>"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('code-span code-data "][ref]")
+                            ('text text-data "foo")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link matching is case-insensitive"
+  (match (parse-inlines (make-document "[foo][BaR]"
+                                       '(("bar" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
 
 (test-end)
 
