@@ -535,6 +535,129 @@ tags, code spans, and autolinks over link grouping"
      #t)
     (x (pk 'fail x #f))))
 
+;; full reference links
+
+(define (make-document text references)
+  (node-add-data 
+   (make-node 'document '()
+              (list (make-node 'paragraph #f
+                               (list (make-node 'text #f (list text))))))
+   'link-references references))
+
+(test-assert "parse-inlines, full reference link simple"
+  (match (parse-inlines (make-document "[foo][bar]"
+                                       '(("bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-document "[link [foo [bar]]][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar]]")
+                                   ('text text-data "[")
+                                   ('text text-data "foo ")
+                                   ('text text-data "[")
+                                   ('text text-data "link "))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link may contain balanced brackets, but not
+unbalanced ones, unless they are escaped"
+  (match (parse-inlines (make-document "[link \\[bar][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar")
+                                   ('text text-data "[")
+                                   ('text text-data "link "))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link text may contain inline content"
+  (match (parse-inlines (make-document "[link *foo **bar** `#`*][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('emphasis em-data1
+                                              ('code-span code-data "#")
+                                              ('text text-data " ")
+                                              ('emphasis em-data2
+                                                         ('text text-data "bar"))
+                                              ('text text-data "foo "))
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (em? em-data1)
+          (strong? em-data2)))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link text may contain inline content"
+  (match (parse-inlines (make-document "[![moon](moon.jpg)][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('emphasis em-data1
+                                              ('code-span code-data "#")
+                                              ('text text-data " ")
+                                              ('emphasis em-data2
+                                                         ('text text-data "bar"))
+                                              ('text text-data "foo "))
+                                   ('text text-data "link "))))
+     (and (link-destination=? link-data "/uri")
+          (em? em-data1)
+          (strong? em-data2)))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 2)
+(test-assert "parse-inlines, full reference link text may not contain other links,
+at any level of nesting"
+  (match (parse-inlines (make-document "[foo [bar](/uri)][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data2
+                                   ('text text-data "ref"))
+                            ('text text-data "]")
+                            ('link link-data1
+                                   ('text text-data "bar"))
+                            ('text text-data "foo ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data1 "/uri")
+          (link-destination=? link-data2 "/uri")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link text may not contain other links,
+at any level of nesting"
+  (match (parse-inlines (make-document "[foo *bar [baz][ref]*][ref]"
+                                       '(("ref" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data2
+                                   ('text text-data "ref"))
+                            ('text text-data "]")
+                            ('emphasis em-data
+                                       ('link link-data
+                                              ('text text-data "baz"))
+                                       ('text text-data "bar "))
+                            ('text text-data "foo ")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/uri")
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
