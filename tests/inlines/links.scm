@@ -720,7 +720,6 @@ code spans, and autolinks"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, full reference link matching is case-insensitive"
   (match (parse-inlines (make-document "[foo][BaR]"
                                        '(("bar" "/uri" #f))))
@@ -731,15 +730,16 @@ code spans, and autolinks"
      (link-destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
+(setlocale LC_ALL "en_US.utf8")
 (test-assert "parse-inlines, full reference link unicode case fold is used"
   (match (parse-inlines (make-document "[Толпой][ТОЛПОЙ] is a Russian word."
                                        '(("толпой" "/url" #f))))
     (('document doc-data
                 ('paragraph para-data
+                            ('text text-data " is a Russian word.")
                             ('link link-data
-                                   ('text text-data "foo"))))
-     (link-destination=? link-data "/uri"))
+                                   ('text text-data "Толпой"))))
+     (link-destination=? link-data "/url"))
     (x (pk 'fail x #f))))
 
 (test-expect-fail 1)

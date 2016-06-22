@@ -306,7 +306,7 @@
     (cond ((link-definition? text) =>
            (lambda (match)
              (loop (match:suffix match)
-                   (cons (list (match:substring match 1)
+                   (cons (list (string-map char-downcase (match:substring match 1))
                                (match:substring match 3)
                                (match:substring match 7))
                          links))))

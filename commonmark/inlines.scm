@@ -200,7 +200,7 @@
 (define (make-reference-lookup document)
   (let ((references (node-get-data document 'link-references)))
     (if references
-        (cut assoc-ref references <>)
+        (lambda (link-label) (assoc-ref references (string-map char-downcase link-label)))
         (const #f))))
 
 ;; Node -> Node

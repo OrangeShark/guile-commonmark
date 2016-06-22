@@ -50,7 +50,7 @@
                (('document doc-data
                            ('paragraph para-data1
                                        ('text text-data1 "[Foo*bar\\]]")))
-                (any (cut equal? '("Foo*bar\\]" "my_(url)" "'title (with parens)'")  <>) (link-references doc-data)))
+                (any (cut equal? '("foo*bar\\]" "my_(url)" "'title (with parens)'")  <>) (link-references doc-data)))
                (x (pk 'fail x #f))))
 
 
