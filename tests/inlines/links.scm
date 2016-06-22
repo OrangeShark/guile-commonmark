@@ -731,6 +731,86 @@ code spans, and autolinks"
      (link-destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link unicode case fold is used"
+  (match (parse-inlines (make-document "[Толпой][ТОЛПОЙ] is a Russian word."
+                                       '(("толпой" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
+and the link label"
+  (match (parse-inlines (make-document "[foo] [bar]"
+                                       '(("bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('text text-data "foo]")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
+and the link label"
+  (match (parse-inlines (make-document "[foo]\n[bar]"
+                                       '(("bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('softbreak break-data)
+                            ('text text-data "foo]")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link when there are multiple matching link
+reference definitions, the first is used"
+  (match (parse-inlines (make-document "[bar][foo]"
+                                       '(("foo" "/url1" #f)
+                                         ("foo" "/url2" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))))
+     (link-destination=? link-data "/url1"))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link matching is performed on normalized strings,
+not parsed inline content"
+  (match (parse-inlines (make-document "[bar][foo\\!]"
+                                       '(("foo!" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "]")
+                            ('text text-data "!")
+                            ('text text-data "foo")
+                            ('text text-data "[")
+                            ('text text-data "bar]")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, full reference link labels cannot contain brackets, unless
+they are backslash-escaped"
+  (match (parse-inlines (make-document "[foo][ref\\[]"
+                                       '(("ref\\[" "/uri" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (link-destination=? link-data "/uri"))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
