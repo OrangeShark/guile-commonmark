@@ -620,7 +620,6 @@ unbalanced ones, unless they are escaped"
           (strong? em-data2)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-inlines, full reference link text may not contain other links,
 at any level of nesting"
   (match (parse-inlines (make-document "[foo [bar](/uri)][ref]"
@@ -742,7 +741,6 @@ code spans, and autolinks"
      (link-destination=? link-data "/url"))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
 and the link label"
   (match (parse-inlines (make-document "[foo] [bar]"
@@ -751,13 +749,12 @@ and the link label"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "bar"))
-                            ('text text-data "foo]")
+                            ('text text-data "foo] ")
                             ('text text-data "[")))
      (and (link-destination=? link-data "/url")
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
 and the link label"
   (match (parse-inlines (make-document "[foo]\n[bar]"
@@ -849,7 +846,6 @@ they are backslash-escaped"
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, collapsed reference link, whitespace is not allowed between
 the two sets of brackets"
   (match (parse-inlines (make-document "[foo] \n[]"
@@ -859,13 +855,69 @@ the two sets of brackets"
                             ('text text-data "]")
                             ('text text-data "[")
                             ('softbreak break-data)
-                            ('text text-data " ")
+                            ('text text-data "")
                             ('link link-data
-                                   ('text text-data "Foo"))))
+                                   ('text text-data "foo"))))
      (and (link-destination=? link-data "/url")
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
+;; shortcut reference link
+
+(test-assert "parse-inlines, shortcut reference link simple"
+  (match (parse-inlines (make-document "[foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link simple"
+  (match (parse-inlines (make-document "[*foo* bar]"
+                                       '(("*foo* bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data " bar")
+                                   ('emphasis em-data
+                                              ('text text-data "foo")))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link simple"
+  (match (parse-inlines (make-document "[[*foo* bar]]"
+                                       '(("*foo* bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "]")
+                            ('link link-data
+                                   ('text text-data " bar")
+                                   ('emphasis em-data
+                                              ('text text-data "foo")))
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link simple"
+  (match (parse-inlines (make-document "[[bar [foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))
+                            ('text text-data "bar ")
+                            ('text text-data "[")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
 
 (test-end)
 

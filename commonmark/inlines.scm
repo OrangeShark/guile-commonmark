@@ -275,9 +275,10 @@
 
 (define* (blank-trailing-space? node #:optional (offset 1))
   (let ((str (last-child node)))
-    (case (string-ref str (- (string-length str) offset))
-      ((#\space) #t)
-      (else #f))))
+    (and (<= offset (string-length str))
+         (case (string-ref str (- (string-length str) offset))
+           ((#\space) #t)
+           (else #f)))))
 
 (define (remove-trailing-space nodes)
   (let ((str (last-child (car nodes))))
@@ -399,11 +400,21 @@
                             (text-advance link-text 2))
                     (values #f (text-advance text 1)))))
             (else (values #f (text-advance text 1))))))
+  (define (shortcut-reference-link? link-text)
+    (let* ((label (link-label link-text))
+           (reference (ref-proc label)))
+      (if reference
+          (values (make-link link-text (car reference) (cadr reference)) link-text)
+          (values #f (text-advance text 1)))))
   (let ((link-text (link-text? text ref-proc)))
     (cond ((and link-text (not (text-end? link-text)) (char=? #\( (text-char link-text)))
            (inline-link? link-text))
           ((and link-text (not (text-end? link-text)) (char=? #\[ (text-char link-text)))
-           (full-reference-link? link-text))
+           (let-values (((link text) (full-reference-link? link-text)))
+             (if link
+                 (values link text)
+                 (shortcut-reference-link? link-text))))
+          (link-text (shortcut-reference-link? link-text))
           (else (values #f (text-advance text 1))))))
 
 (define (parse-link text nodes delim-stack ref-proc)
