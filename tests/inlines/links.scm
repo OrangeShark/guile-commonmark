@@ -811,6 +811,62 @@ they are backslash-escaped"
      (link-destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
+;; collapsed reference link
+
+(test-assert "parse-inlines, simple collapsed reference link"
+  (match (parse-inlines (make-document "[foo][]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, simple collapsed reference link"
+  (match (parse-inlines (make-document "[*foo* bar][]"
+                                       '(("*foo* bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data " bar")
+                                   ('emphasis em-data
+                                              ('text text-data "foo")))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")
+          (em? em-data)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, collapsed reference link labels are case-insensitive"
+  (match (parse-inlines (make-document "[Foo][]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "Foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-expect-fail 1)
+(test-assert "parse-inlines, collapsed reference link, whitespace is not allowed between
+the two sets of brackets"
+  (match (parse-inlines (make-document "[foo] \n[]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "]")
+                            ('text text-data "[")
+                            ('softbreak break-data)
+                            ('text text-data " ")
+                            ('link link-data
+                                   ('text text-data "Foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))

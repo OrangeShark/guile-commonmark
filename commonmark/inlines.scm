@@ -345,8 +345,10 @@
 
 
 (define (link? text ref-proc)
+  (define (link-label label-end)
+    (text-substring text (+ (text-position text) 1) (- (text-position label-end) 1)))
   (define* (make-link link-text #:optional (dest #f) (title #f))
-    (let* ((link-text (text-substring text (+ (text-position text) 1) (- (text-position link-text) 1)))
+    (let* ((link-text (link-label link-text))
            (link-text-nodes (parse-char (make-text link-text 0) '() (make-empty-delim-stack) ref-proc)))
     (make-link-node link-text-nodes
                     (or dest "")
@@ -389,6 +391,13 @@
                    (values (make-link link-text (car reference) (cadr reference))
                            (text-move link-text (match:end label-match 0)))
                    (values #f (text-advance text 1)))))
+            ((char=? #\] (text-char (text-advance link-text 1)))
+              (let* ((label (link-label link-text))
+                     (reference (ref-proc label)))
+                (if reference
+                    (values (make-link link-text (car reference) (cadr reference))
+                            (text-advance link-text 2))
+                    (values #f (text-advance text 1)))))
             (else (values #f (text-advance text 1))))))
   (let ((link-text (link-text? text ref-proc)))
     (cond ((and link-text (not (text-end? link-text)) (char=? #\( (text-char link-text)))
