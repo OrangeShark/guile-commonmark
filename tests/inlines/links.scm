@@ -919,6 +919,114 @@ the two sets of brackets"
           (link-title=? link-data "title")))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, shortcut reference link labels are case-insensitive"
+  (match (parse-inlines (make-document "[Foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "Foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link a space after the link text should
+be preserved"
+  (match (parse-inlines (make-document "[foo] bar"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data " bar")
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link backslash-escape the opening bracket
+to avoid links"
+  (match (parse-inlines (make-document "\\[foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "foo]")
+                            ('text text-data "[")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link note that this is a link,
+because a link label ends with the first following closing bracket"
+  (match (parse-inlines (make-document "*[foo*]"
+                                       '(("foo*" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "*")
+                                   ('text text-data "foo"))
+                            ('text text-data "*")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link, full references take precedence
+over shortcut references"
+  (match (parse-inlines (make-document "[foo][bar]"
+                                       '(("foo" "/url1" #f)
+                                         ("bar" "/url2" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data "/url2")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link, in the following case [bar][baz]
+is parsed as a reference, [foo] as normal text"
+  (match (parse-inlines (make-document "[foo][bar][baz]"
+                                       '(("baz" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('text text-data "foo]")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link, here [foo][bar] is parsed as a reference
+since [bar] is defined"
+  (match (parse-inlines (make-document "[foo][bar][baz]"
+                                       '(("baz" "/url1" #f)
+                                         ("bar" "/url2" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data2
+                                   ('text text-data "baz"))
+                            ('link link-data1
+                                   ('text text-data "foo"))))
+     (and (link-destination=? link-data1 "/url2")
+          (link-title=? link-data1 #f)
+          (link-destination=? link-data2 "/url1")
+          (link-title=? link-data2 #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut reference link, here [foo] is not parsed as a shortcut
+reference, because it is followed by a link label (even though [bar] is not defined)"
+  (match (parse-inlines (make-document "[foo][bar][baz]"
+                                       '(("baz" "/url1" #f)
+                                         ("foo" "/url2" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "bar"))
+                            ('text text-data "foo]")
+                            ('text text-data "[")))
+     (and (link-destination=? link-data "/url1")
+          (link-title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))

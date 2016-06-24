@@ -399,7 +399,7 @@
                     (values (make-link link-text (car reference) (cadr reference))
                             (text-advance link-text 2))
                     (values #f (text-advance text 1)))))
-            (else (values #f (text-advance text 1))))))
+            (else (shortcut-reference-link? link-text)))))
   (define (shortcut-reference-link? link-text)
     (let* ((label (link-label link-text))
            (reference (ref-proc label)))
@@ -410,10 +410,7 @@
     (cond ((and link-text (not (text-end? link-text)) (char=? #\( (text-char link-text)))
            (inline-link? link-text))
           ((and link-text (not (text-end? link-text)) (char=? #\[ (text-char link-text)))
-           (let-values (((link text) (full-reference-link? link-text)))
-             (if link
-                 (values link text)
-                 (shortcut-reference-link? link-text))))
+           (full-reference-link? link-text))
           (link-text (shortcut-reference-link? link-text))
           (else (values #f (text-advance text 1))))))
 
