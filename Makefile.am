@@ -29,7 +29,8 @@ TESTS =	                                       \
   tests/inlines/backslash-escape.scm           \
   tests/inlines/softbreak.scm                  \
   tests/inlines/hardbreak.scm                  \
-  tests/inlines/links.scm
+  tests/inlines/links.scm                      \
+  tests/inlines/images.scm
 
 TEST_EXTENSIONS = .scm
 
