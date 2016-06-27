@@ -63,6 +63,8 @@
             emphasis-node?
             make-link-node
             link-node?
+            make-image-node
+            image-node?
             child-closed?
             close-node
             last-child
@@ -294,6 +296,13 @@
 
 (define (link-node? node)
   (node-type? node 'link))
+
+(define (make-image-node nodes destination title)
+  (make-node 'image `((destination . ,destination)
+                      (title . ,title)) nodes))
+
+(define (image-node? node)
+  (node-type? node 'image))
 
 (define (child-closed? n)
   (node-closed? (last-child n)))
