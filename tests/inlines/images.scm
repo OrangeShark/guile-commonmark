@@ -221,6 +221,55 @@ of brackets"
           (title=? image-data "title")))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, shortcut image style"
+  (match (parse-inlines (make-document "![foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, shortcut image style"
+  (match (parse-inlines (make-document "![*foo* bar]"
+                                       '(("*foo* bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                    ('text text-data " bar")
+                                    ('emphasis em-data
+                                               ('text text-data "foo")))))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, images if you just want bracketed text, you can
+backslash-escape the opening ! and ["
+  (match (parse-inlines (make-document "\\!\\[foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "foo]")
+                            ('text text-data "[")
+                            ('text text-data "!")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, images if you want a link after a literal !,
+backslash-escape the !"
+  (match (parse-inlines (make-document "\\![foo]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo"))
+                            ('text text-data "!")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
