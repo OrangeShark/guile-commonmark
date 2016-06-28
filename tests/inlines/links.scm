@@ -855,7 +855,6 @@ the two sets of brackets"
                             ('text text-data "]")
                             ('text text-data "[")
                             ('softbreak break-data)
-                            ('text text-data "")
                             ('link link-data
                                    ('text text-data "foo"))))
      (and (link-destination=? link-data "/url")

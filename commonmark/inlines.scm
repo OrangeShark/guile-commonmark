@@ -281,9 +281,11 @@
            (else #f)))))
 
 (define (remove-trailing-space nodes)
-  (let ((str (last-child (car nodes))))
-    (cons (make-text-node (string-trim-right str #\space))
-          (cdr nodes))))
+  (let* ((str (last-child (car nodes)))
+         (new-str (string-trim-right str #\space)))
+    (if (> (string-length new-str) 0)
+        (cons (make-text-node new-str) (cdr nodes))
+        (cdr nodes))))
 
 (define (parse-newline text nodes delim-stack ref-proc)
   (let ((new-text (text-advance-skip (text-advance text 1) #\space)))
@@ -450,7 +452,7 @@
 
 (define (pop-remaining-delim nodes delim-stack)
   (if (delim-stack-empty? delim-stack)
-      (if (text-node? (car nodes)) (remove-trailing-space nodes) nodes)
+      (if (and (not (null? nodes)) (text-node? (car nodes))) (remove-trailing-space nodes) nodes)
       (let-values (((d n) (delim-stack-peek delim-stack)))
         (pop-remaining-delim (append nodes (cons (delim->text d) n))
                              (delim-stack-pop delim-stack)))))

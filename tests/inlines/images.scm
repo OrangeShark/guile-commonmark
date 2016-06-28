@@ -93,6 +93,134 @@
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
+(test-assert "parse-inlines, shortcut reference image"
+  (match (parse-inlines (make-document "![foo *bar*][]"
+                                       '(("foo *bar*" "train.jpg" "\"train & tracks\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('emphasis em-data
+                                              ('text text-data "bar"))
+                                   ('text text-data "foo "))))
+     (and (destination=? image-data "train.jpg")
+          (title=? image-data "train & tracks")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, reference image reference case does not matter"
+  (match (parse-inlines (make-document "![foo *bar*][FOOBAR]"
+                                       '(("foobar" "train.jpg" "\"train & tracks\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('emphasis em-data
+                                              ('text text-data "bar"))
+                                   ('text text-data "foo "))))
+     (and (destination=? image-data "train.jpg")
+          (title=? image-data "train & tracks")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image title not required"
+  (match (parse-inlines (make-paragraph "![foo](train.jpg)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "train.jpg")
+          (title=? image-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image whitespaces allowed between destination and title"
+  (match (parse-inlines (make-paragraph "My ![foo bar](/path/to/train.jpg  \"title\"   \n)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                    ('text text-data "foo bar"))
+                            ('text text-data "My ")))
+     (and (destination=? image-data "/path/to/train.jpg")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image destination can use <>"
+  (match (parse-inlines (make-paragraph "![foo](<url>)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                    ('text text-data "foo"))))
+     (and (destination=? image-data "url")
+          (title=? image-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image description can be empty"
+  (match (parse-inlines (make-paragraph "![](/url)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data)))
+     (and (destination=? image-data "/url")
+          (title=? image-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, reference image style"
+  (match (parse-inlines (make-document "![foo][bar]"
+                                       '(("bar" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "/url")
+          (title=? image-data #f)))
+    (x (pk 'fail x #f))))
+
+
+(test-assert "parse-inlines, reference image style"
+  (match (parse-inlines (make-document "![foo][BAR]"
+                                       '(("bar" "/url" #f))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "/url")
+          (title=? image-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, collapsed image style"
+  (match (parse-inlines (make-document "![foo][]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, collapsed image style"
+  (match (parse-inlines (make-document "![*foo* bar][]"
+                                       '(("*foo* bar" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                    ('text text-data " bar")
+                                    ('emphasis em-data
+                                               ('text text-data "foo")))))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, reference images, whitespace is not allowed between two sets
+of brackets"
+  (match (parse-inlines (make-document "![foo] \n[]"
+                                       '(("foo" "/url" "\"title\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "]")
+                            ('text text-data "[")
+                            ('softbreak break-data)
+                            ('image image-data
+                                   ('text text-data "foo"))))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
+    (x (pk 'fail x #f))))
+
 (test-end)
 
 (exit (= (test-runner-fail-count (test-runner-current)) 0))
