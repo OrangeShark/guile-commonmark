@@ -29,7 +29,7 @@
 
 (define re-start-ticks (make-regexp "^`+"))
 (define re-ticks (make-regexp "`+"))
-(define re-main (make-regexp "^[^`*_\\\n[]+"))
+(define re-main (make-regexp "^[^`*_\\\n[!]+"))
 (define re-link-destination-brackets (make-regexp (string-append "^<(([^ <>\n\t\\]|"
                                                                  escaped-characters
                                                                  ")*)>")))

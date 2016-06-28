@@ -28,10 +28,10 @@
              (list (make-node 'paragraph #f
                               (list (make-node 'text #f (list text)))))))
 
-(define (image-destination=? node-data destination)
+(define (destination=? node-data destination)
   (equal? (assq-ref node-data 'destination) destination))
 
-(define (image-title=? node-data title)
+(define (title=? node-data title)
   (equal? (assq-ref node-data 'title) title))
 
 (test-assert "parse-inlines, simple inline image"
@@ -40,10 +40,58 @@
                 ('paragraph para-data
                             ('image image-data
                                     ('text text-data "foo"))))
-     (and (image-destination=? image-data "/url")
-          (image-title=? image-data "title")))
+     (and (destination=? image-data "/url")
+          (title=? image-data "title")))
     (x (pk 'fail x #f))))
 
+(define (make-document text references)
+  (node-add-data
+   (make-node 'document '()
+              (list (make-node 'paragraph #f
+                               (list (make-node 'text #f (list text))))))
+   'link-references references))
+
+
+(test-assert "parse-inlines, full reference image"
+  (match (parse-inlines (make-document "![foo *bar*]"
+                                       '(("foo *bar*" "train.jpg" "\"train & tracks\""))))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('emphasis em-data
+                                              ('text text-data "bar"))
+                                   ('text text-data "foo "))))
+     (and (destination=? image-data "train.jpg")
+          (title=? image-data "train & tracks")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image can have inline images in image description"
+  (match (parse-inlines (make-paragraph "![foo ![bar](/url1)](/url2)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data1
+                                   ('image image-data2
+                                              ('text text-data "bar"))
+                                   ('text text-data "foo "))))
+     (and (destination=? image-data1 "/url2")
+          (title=? image-data1 #f)
+          (destination=? image-data2 "/url1")
+          (title=? image-data2 #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, image can have inline links in image description"
+  (match (parse-inlines (make-paragraph "![foo [bar](/url1)](/url2)"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('image image-data
+                                   ('link link-data
+                                              ('text text-data "bar"))
+                                   ('text text-data "foo "))))
+     (and (destination=? image-data "/url2")
+          (title=? image-data #f)
+          (destination=? link-data "/url1")
+          (title=? link-data #f)))
+    (x (pk 'fail x #f))))
 
 (test-end)
 
