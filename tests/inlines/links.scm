@@ -28,10 +28,10 @@
              (list (make-node 'paragraph #f
                               (list (make-node 'text #f (list text)))))))
 
-(define (link-destination=? node-data destination)
+(define (destination=? node-data destination)
   (equal? (assq-ref node-data 'destination) destination))
 
-(define (link-title=? node-data title)
+(define (title=? node-data title)
   (equal? (assq-ref node-data 'title) title))
 
 (test-assert "parse-inlines, simple inline link"
@@ -40,8 +40,8 @@
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/uri")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link title may be omitted"
@@ -50,8 +50,8 @@
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link both the title and the destination may be omitted"
@@ -60,8 +60,8 @@
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link both the title and the destination may be omitted"
@@ -70,8 +70,8 @@
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link the destination cannot contain spaces, even if enclosed in
@@ -124,8 +124,8 @@ pointy brackets"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "\\(foo\\)")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "\\(foo\\)")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link one level of balanced parentheses is allowed without escaping"
@@ -134,8 +134,8 @@ pointy brackets"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "(foo)and(bar)")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "(foo)and(bar)")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link if you have parentheses within parentheses, you need to
@@ -155,8 +155,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "foo(and\\(bar\\))")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "foo(and\\(bar\\))")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link if you have parentheses within parentheses, you need to
@@ -166,8 +166,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "foo(and(bar))")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "foo(and(bar))")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link parentheses and other symbols can also be escaped"
@@ -176,8 +176,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "foo\\)\\:")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "foo\\)\\:")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link can contain fragment identifiers and queries"
@@ -186,8 +186,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "#fragment")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "#fragment")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link can contain fragment identifiers and queries"
@@ -196,8 +196,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "http://example.com#fragment")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "http://example.com#fragment")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link can contain fragment identifiers and queries"
@@ -206,8 +206,8 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "http://example.com?foo=3#frag")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "http://example.com?foo=3#frag")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link backslash before a non-escapable character is just
@@ -217,8 +217,8 @@ a backslash"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "foo\\bar")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "foo\\bar")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-expect-fail 2)
@@ -230,8 +230,8 @@ Unicode code points"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "foo%20b%C3%A4")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "foo%20b%C3%A4")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link titles can often be parsed as destinations, if you
@@ -241,8 +241,8 @@ try to omit the destination and keep the title, you'll get unexpected results"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "%22title%22")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "%22title%22")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link titles may be in double quotes"
@@ -251,8 +251,8 @@ try to omit the destination and keep the title, you'll get unexpected results"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link titles may be in single quotes"
@@ -261,8 +261,8 @@ try to omit the destination and keep the title, you'll get unexpected results"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link titles may be in parentheses"
@@ -271,8 +271,8 @@ try to omit the destination and keep the title, you'll get unexpected results"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-expect-fail 1)
@@ -283,8 +283,8 @@ references may be used in titles"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title &quot;&quot;")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title &quot;&quot;")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link nested balanced quotes are not allowed without escaping"
@@ -302,8 +302,8 @@ references may be used in titles"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title \"and\" title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title \"and\" title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link whitespace is allowed around the destination and title"
@@ -312,8 +312,8 @@ references may be used in titles"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link but it is not allowed between the link text and
@@ -337,8 +337,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "foo ")
                                    ('text text-data "[")
                                    ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link text may contain balanced brackets, but not
@@ -360,8 +360,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "bar"))
                             ('text text-data "link ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link text may contain balanced brackets, but not
@@ -373,8 +373,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "bar")
                                    ('text text-data "[")
                                    ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (define (em? node-data)
@@ -395,21 +395,23 @@ unbalanced ones, unless they are escaped"
                                                         ('text text-data "bar"))
                                               ('text text-data "foo "))
                                    ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)
           (em? em-data1)
           (strong? em-data2)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, link text may contain inline content"
   (match (parse-inlines (make-paragraph "[![moon](moon.jpg)](/uri)"))
     (('document doc-data
                 ('paragraph para-data
                             ('link link-data
-                                   ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+                                   ('image image-data
+                                           ('text text-data "moon")))))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)
+          (destination=? image-data "moon.jpg")
+          (title=? image-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, links may not contain other links at any level of nesting"
@@ -421,8 +423,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "bar"))
                             ('text text-data "foo ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, links may not contain other links at any level of nesting"
@@ -438,26 +440,24 @@ unbalanced ones, unless they are escaped"
                                        ('text text-data "["))
                             ('text text-data "foo ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)
           (em? em-data)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, links may not contain other links at any level of nesting"
-  (match (parse-inlines (make-paragraph "![[[foo](/uri1)](uri2)](/uri3)"))
+  (match (parse-inlines (make-paragraph "![[[foo](uri1)](uri2)](uri3)"))
     (('document doc-data
                 ('paragraph para-data
-                            ('text text-data "](/uri)")
-                            ('link link-data
-                                   ('text text-data "baz"))
-                            ('text text-data "bar ")
-                            ('text text-data "[")
-                            ('text text-data "foo ")
-                            ('text text-data "[")))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)
-          (em? em-data)))
+                            ('image image-data
+                                    ('text text-data "](uri2)")
+                                    ('link link-data
+                                           ('text text-data "foo"))
+                                    ('text text-data "["))))
+     (and (destination=? link-data "uri1")
+          (title=? link-data #f)
+          (destination=? image-data "uri3")
+          (title=? image-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link text have higher precedence over emphasis"
@@ -468,8 +468,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "*")
                                    ('text text-data "foo"))
                             ('text text-data "*")))
-     (and (link-destination=? link-data "/uri")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link text have higher precedence over emphasis"
@@ -480,8 +480,8 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "bar")
                                    ('text text-data "*")
                                    ('text text-data "foo "))))
-     (and (link-destination=? link-data "baz*")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "baz*")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, brackets that aren't part of links do not take
@@ -551,8 +551,8 @@ tags, code spans, and autolinks over link grouping"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link may contain balanced brackets, but not
@@ -567,7 +567,7 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "foo ")
                                    ('text text-data "[")
                                    ('text text-data "link "))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link may contain balanced brackets, but not
@@ -580,7 +580,7 @@ unbalanced ones, unless they are escaped"
                                    ('text text-data "bar")
                                    ('text text-data "[")
                                    ('text text-data "link "))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link text may contain inline content"
@@ -596,28 +596,23 @@ unbalanced ones, unless they are escaped"
                                                          ('text text-data "bar"))
                                               ('text text-data "foo "))
                                    ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
+     (and (destination=? link-data "/uri")
           (em? em-data1)
           (strong? em-data2)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, full reference link text may contain inline content"
   (match (parse-inlines (make-document "[![moon](moon.jpg)][ref]"
                                        '(("ref" "/uri" #f))))
     (('document doc-data
                 ('paragraph para-data
                             ('link link-data
-                                   ('emphasis em-data1
-                                              ('code-span code-data "#")
-                                              ('text text-data " ")
-                                              ('emphasis em-data2
-                                                         ('text text-data "bar"))
-                                              ('text text-data "foo "))
-                                   ('text text-data "link "))))
-     (and (link-destination=? link-data "/uri")
-          (em? em-data1)
-          (strong? em-data2)))
+                                   ('image image-data
+                                           ('text text-data "moon")))))
+     (and (destination=? link-data "/uri")
+          (title=? link-data #f)
+          (destination=? image-data "moon.jpg")
+          (title=? image-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link text may not contain other links,
@@ -633,8 +628,8 @@ at any level of nesting"
                                    ('text text-data "bar"))
                             ('text text-data "foo ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data1 "/uri")
-          (link-destination=? link-data2 "/uri")))
+     (and (destination=? link-data1 "/uri")
+          (destination=? link-data2 "/uri")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link text may not contain other links,
@@ -652,7 +647,7 @@ at any level of nesting"
                                        ('text text-data "bar "))
                             ('text text-data "foo ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/uri")
+     (and (destination=? link-data "/uri")
           (em? em-data)))
     (x (pk 'fail x #f))))
 
@@ -665,7 +660,7 @@ at any level of nesting"
                                    ('text text-data "*")
                                    ('text text-data "foo"))
                             ('text text-data "*")))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link text precedence over emphasis grouping"
@@ -677,7 +672,7 @@ at any level of nesting"
                                    ('text text-data "bar")
                                    ('text text-data "*")
                                    ('text text-data "foo "))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (test-expect-fail 1)
@@ -691,7 +686,7 @@ code spans, and autolinks"
                                    ('text text-data "bar")
                                    ('text text-data "*")
                                    ('text text-data "foo "))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link text precedence lower than HTML tags,
@@ -726,7 +721,7 @@ code spans, and autolinks"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 (setlocale LC_ALL "en_US.utf8")
@@ -738,7 +733,7 @@ code spans, and autolinks"
                             ('text text-data " is a Russian word.")
                             ('link link-data
                                    ('text text-data "Толпой"))))
-     (link-destination=? link-data "/url"))
+     (destination=? link-data "/url"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
@@ -751,8 +746,8 @@ and the link label"
                                    ('text text-data "bar"))
                             ('text text-data "foo] ")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link no whitespace is allowed between the link text
@@ -766,8 +761,8 @@ and the link label"
                             ('softbreak break-data)
                             ('text text-data "foo]")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link when there are multiple matching link
@@ -779,7 +774,7 @@ reference definitions, the first is used"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "bar"))))
-     (link-destination=? link-data "/url1"))
+     (destination=? link-data "/url1"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link matching is performed on normalized strings,
@@ -805,7 +800,7 @@ they are backslash-escaped"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (link-destination=? link-data "/uri"))
+     (destination=? link-data "/uri"))
     (x (pk 'fail x #f))))
 
 ;; collapsed reference link
@@ -817,8 +812,8 @@ they are backslash-escaped"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, simple collapsed reference link"
@@ -830,8 +825,8 @@ they are backslash-escaped"
                                    ('text text-data " bar")
                                    ('emphasis em-data
                                               ('text text-data "foo")))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")
           (em? em-data)))
     (x (pk 'fail x #f))))
 
@@ -842,8 +837,8 @@ they are backslash-escaped"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "Foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, collapsed reference link, whitespace is not allowed between
@@ -857,8 +852,8 @@ the two sets of brackets"
                             ('softbreak break-data)
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 ;; shortcut reference link
@@ -870,8 +865,8 @@ the two sets of brackets"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link simple"
@@ -883,8 +878,8 @@ the two sets of brackets"
                                    ('text text-data " bar")
                                    ('emphasis em-data
                                               ('text text-data "foo")))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")
           (em? em-data)))
     (x (pk 'fail x #f))))
 
@@ -899,8 +894,8 @@ the two sets of brackets"
                                    ('emphasis em-data
                                               ('text text-data "foo")))
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")
           (em? em-data)))
     (x (pk 'fail x #f))))
 
@@ -914,8 +909,8 @@ the two sets of brackets"
                             ('text text-data "bar ")
                             ('text text-data "[")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link labels are case-insensitive"
@@ -925,8 +920,8 @@ the two sets of brackets"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "Foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link a space after the link text should
@@ -938,8 +933,8 @@ be preserved"
                             ('text text-data " bar")
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data "title")))
+     (and (destination=? link-data "/url")
+          (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link backslash-escape the opening bracket
@@ -963,8 +958,8 @@ because a link label ends with the first following closing bracket"
                                    ('text text-data "*")
                                    ('text text-data "foo"))
                             ('text text-data "*")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/url")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link, full references take precedence
@@ -976,8 +971,8 @@ over shortcut references"
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data "/url2")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/url2")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link, in the following case [bar][baz]
@@ -990,8 +985,8 @@ is parsed as a reference, [foo] as normal text"
                                    ('text text-data "bar"))
                             ('text text-data "foo]")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/url")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link, here [foo][bar] is parsed as a reference
@@ -1005,10 +1000,10 @@ since [bar] is defined"
                                    ('text text-data "baz"))
                             ('link link-data1
                                    ('text text-data "foo"))))
-     (and (link-destination=? link-data1 "/url2")
-          (link-title=? link-data1 #f)
-          (link-destination=? link-data2 "/url1")
-          (link-title=? link-data2 #f)))
+     (and (destination=? link-data1 "/url2")
+          (title=? link-data1 #f)
+          (destination=? link-data2 "/url1")
+          (title=? link-data2 #f)))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, shortcut reference link, here [foo] is not parsed as a shortcut
@@ -1022,8 +1017,8 @@ reference, because it is followed by a link label (even though [bar] is not defi
                                    ('text text-data "bar"))
                             ('text text-data "foo]")
                             ('text text-data "[")))
-     (and (link-destination=? link-data "/url1")
-          (link-title=? link-data #f)))
+     (and (destination=? link-data "/url1")
+          (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
 (test-end)
