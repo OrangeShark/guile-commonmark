@@ -29,13 +29,18 @@
 
 (define re-start-ticks (make-regexp "^`+"))
 (define re-ticks (make-regexp "`+"))
-(define re-main (make-regexp "^[^`*_\\\n[!]+"))
+(define re-main (make-regexp "^[^`*_\\\n[!<]+"))
 (define re-link-destination-brackets (make-regexp (string-append "^<(([^ <>\n\t\\]|"
                                                                  escaped-characters
                                                                  ")*)>")))
 (define re-link-destination (make-regexp link-destination))
 (define re-link-title (make-regexp link-title))
 (define re-link-label (make-regexp link-label))
+(define re-autolink (make-regexp "^<([a-zA-Z][a-zA-Z0-9+.-]{1,31}:[^ \t\n<>\x01-\x19]*)>"))
+(define re-email-autolink (make-regexp
+                           (string-append "^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+                                          "[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+                                          "(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)>")))
 
 (define (start-ticks? text)
   (regexp-exec re-start-ticks (text-value text) (text-position text)))
@@ -61,6 +66,12 @@
 
 (define (link-label? text)
   (regexp-exec re-link-label (text-value text) (text-position text)))
+
+(define (autolink? text)
+  (regexp-exec re-autolink (text-value text) (text-position text)))
+
+(define (email-autolink? text)
+  (regexp-exec re-email-autolink (text-value text) (text-position text)))
 
 (define (match-length match)
   (string-length (match:substring match 0)))
@@ -442,6 +453,25 @@
         (parse-char text (cons link nodes) delim-stack ref-proc)
         (parse-char (text-advance text 1) (cons (make-text-node "[") nodes) delim-stack ref-proc))))
 
+(define (parse-autolink text)
+  (let ((autolink-match (autolink? text)))
+    (if autolink-match
+        (values (make-link-node (list (make-text-node (match:substring autolink-match 1)))
+                                (match:substring autolink-match 1) #f)
+                (text-move text (match:end autolink-match 0)))
+        (let ((email-match (email-autolink? text)))
+          (if email-match
+              (values (make-link-node (list (make-text-node (match:substring email-match 1)))
+                                      (string-append "mailto:" (match:substring email-match 1)) #f)
+                      (text-move text (match:end email-match 0)))
+              (values #f text))))))
+
+(define (parse-autolink-or-html text nodes delim-stack ref-proc)
+  (let-values (((autolink text) (parse-autolink text)))
+    (if autolink
+        (parse-char text (cons autolink nodes) delim-stack ref-proc)
+        (parse-char (text-advance text 1) (cons (make-text-node "<") nodes) delim-stack ref-proc))))
+
 (define (parse-normal-text text nodes delim-stack ref-proc)
   (let ((normal-text (normal-text? text)))
     (parse-char (text-move text (match:end normal-text 0))
@@ -471,6 +501,7 @@
         ((#\* #\_) (parse-emphasis text nodes delim-stack ref-proc))
         ((#\[) (parse-link text nodes delim-stack ref-proc))
         ((#\!) (parse-image text nodes delim-stack ref-proc))
+        ((#\<) (parse-autolink-or-html text nodes delim-stack ref-proc))
         (else (parse-normal-text text nodes delim-stack ref-proc)))))
 
 (define (parse-inline node ref-proc)

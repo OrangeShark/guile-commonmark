@@ -89,7 +89,9 @@ pointy brackets"
   (match (parse-inlines (make-paragraph "[link](</my uri>)"))
     (('document doc-data
                 ('paragraph para-data
-                            ('text text-data "link](</my uri>)")
+                            ('text text-data "/my uri>)")
+                            ('text text-data "<")
+                            ('text text-data "link](")
                             ('text text-data "[")))
      #t)
     (x (pk 'fail x #f))))
@@ -113,7 +115,9 @@ pointy brackets"
                 ('paragraph para-data
                             ('text text-data "bar>)")
                             ('softbreak break-data)
-                            ('text text-data "link](<foo")
+                            ('text text-data "foo")
+                            ('text text-data "<")
+                            ('text text-data "link](")
                             ('text text-data "[")))
      #t)
     (x (pk 'fail x #f))))
