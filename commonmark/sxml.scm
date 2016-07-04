@@ -48,6 +48,7 @@
         ((hardbreak-node? n) (hardbreak-node->sxml n))
         ((emphasis-node? n) (emphasis-node->sxml n))
         ((link-node? n) (link-node->sxml n))
+        ((image-node? n) (image-node->sxml n))
         (else (error "unknown node"))))
 
 (define (thematic-break-node->sxml n)
@@ -110,6 +111,25 @@
         (title (title node)))
     `(a (@ (href ,dest) ,@(if title (list (list 'title title)) '()))
         ,@(fold-nodes node->sxml (node-children node)))))
+
+(define (fold-text node)
+  (fold (lambda (elem prev)
+          (append (node->text elem) prev))
+        '()
+        (node-children node)))
+
+(define (node->text node)
+  (if (text-node? node)
+      (node-children node)
+      (fold-text node)))
+
+(define (alt-text node)
+  (string-concatenate (fold-text node)))
+
+(define (image-node->sxml node)
+  (let ((dest (destination node))
+        (title (title node)))
+    `(img (@ (src ,dest) (alt ,(alt-text node)) ,@(if title (list (list 'title title)) '())))))
 
 (define (infostring s)
   (let ((language (string-trim-both s)))
