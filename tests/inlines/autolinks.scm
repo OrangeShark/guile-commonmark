@@ -138,6 +138,89 @@ purposes of this spec are not valid URIs"
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
+;; email autolinks
+(test-assert "parse-inlines, simple email autolinks"
+  (match (parse-inlines (make-paragraph "<foo@bar.example.com>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo@bar.example.com"))))
+     (and (destination=? link-data "mailto:foo@bar.example.com")
+          (title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, simple email autolinks"
+  (match (parse-inlines (make-paragraph "<foo+special@Bar.baz-bar0.com>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('link link-data
+                                   ('text text-data "foo+special@Bar.baz-bar0.com"))))
+     (and (destination=? link-data "mailto:foo+special@Bar.baz-bar0.com")
+          (title=? link-data #f)))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, email autolinks backslash-escapes do not work inside"
+  (match (parse-inlines (make-paragraph "<foo\\+@bar.example.com>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "@bar.example.com>")
+                            ('text text-data "+")
+                            ('text text-data "foo")
+                            ('text text-data "<")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "<>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data ">")
+                            ('text text-data "<")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "< http://foo.bar >"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data " http://foo.bar >")
+                            ('text text-data "<")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "<m:abc>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "m:abc>")
+                            ('text text-data "<")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "<foo.bar.baz>"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "foo.bar.baz>")
+                            ('text text-data "<")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "http://example.com"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "http://example.com")))
+     #t)
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-inlines, these are not autolinks"
+  (match (parse-inlines (make-paragraph "foo@bar.example.com"))
+    (('document doc-data
+                ('paragraph para-data
+                            ('text text-data "foo@bar.example.com")))
+     #t)
+    (x (pk 'fail x #f))))
 
 (test-end)
 
