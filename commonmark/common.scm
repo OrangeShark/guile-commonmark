@@ -16,6 +16,7 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark common)
+  #:use-module (ice-9 regex)
   #:use-module (commonmark entities)
   #:export (ascii-punctuation-characters
             escaped-characters
@@ -26,7 +27,8 @@
             link-label
             re-entity-or-numeric
             remove-quotes
-            entity->string))
+            entity->string
+            unescape-string))
 
 ;; ']' needs to be the first character after an openning '[' to be able
 ;; to match ']'
@@ -47,10 +49,13 @@
 (define decimal-numeric "#[0-9]{1,8}")
 (define hexadecimal-numeric "#x[0-9a-f]{1,8}")
 (define entity "[a-z][a-z0-9]{1,31}")
-(define entity-or-numeric (string-append "^&(" decimal-numeric
+(define entity-or-numeric (string-append "&(" decimal-numeric
                                          "|" hexadecimal-numeric
                                          "|" entity ");"))
-(define re-entity-or-numeric (make-regexp entity-or-numeric regexp/icase))
+(define re-entity-or-numeric (make-regexp (string-append "^" entity-or-numeric) regexp/icase))
+
+(define re-escaped-or-entity (make-regexp (string-append escaped-characters
+                                                         "|" entity-or-numeric) regexp/icase))
 
 (define (remove-quotes str)
   (substring str 1 (- (string-length str) 1)))
@@ -72,3 +77,13 @@
         ((hexadecimal? str) (numeric->string (substring str 2) 16))
         (else (let ((codepoints (entity->codepoints str)))
                 (and codepoints (list->string (map integer->char codepoints)))))))
+
+(define (unescape-string str)
+  (define (replace m)
+    (let ((str (match:substring m 0)))
+      (if (char=? (string-ref str 0) #\\)
+          (string (string-ref str 1))
+          (or (entity->string (substring str 1 (- (string-length str) 1)))
+              str))))
+  (regexp-substitute/global #f re-escaped-or-entity str
+                            'pre replace 'post))
