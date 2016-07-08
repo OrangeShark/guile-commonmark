@@ -15,7 +15,8 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (commonmark common) 
+(define-module (commonmark common)
+  #:use-module (commonmark entities)
   #:export (ascii-punctuation-characters
             escaped-characters
             regular-characters
@@ -23,7 +24,9 @@
             link-destination
             link-title
             link-label
-            remove-quotes))
+            re-entity-or-numeric
+            remove-quotes
+            entity->string))
 
 ;; ']' needs to be the first character after an openning '[' to be able
 ;; to match ']'
@@ -41,6 +44,31 @@
 (define link-label (string-append "\\[(([^][]|"
                                      escaped-characters
                                      "){1,1000})\\]"))
+(define decimal-numeric "#[0-9]{1,8}")
+(define hexadecimal-numeric "#x[0-9a-f]{1,8}")
+(define entity "[a-z][a-z0-9]{1,31}")
+(define entity-or-numeric (string-append "^&(" decimal-numeric
+                                         "|" hexadecimal-numeric
+                                         "|" entity ");"))
+(define re-entity-or-numeric (make-regexp entity-or-numeric regexp/icase))
 
 (define (remove-quotes str)
   (substring str 1 (- (string-length str) 1)))
+
+(define (entity->string str)
+  (define (decimal? str)
+    (and (char=? (string-ref str 0) #\#) (not (char-ci=? (string-ref str 1) #\x))))
+
+  (define (hexadecimal? str)
+    (and (char=? (string-ref str 0) #\#) (char-ci=? (string-ref str 1) #\x)))
+
+  (define (numeric->string str base)
+    (let ((ch (false-if-exception (integer->char (string->number str base)))))
+      (string (if (and ch (not (char=? ch #\nul)))
+                  ch
+                  #\xfffd))))
+
+  (cond ((decimal? str) (numeric->string (substring str 1) 10))
+        ((hexadecimal? str) (numeric->string (substring str 2) 16))
+        (else (let ((codepoints (entity->codepoints str)))
+                (and codepoints (list->string (map integer->char codepoints)))))))

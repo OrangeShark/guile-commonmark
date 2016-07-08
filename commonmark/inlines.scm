@@ -25,7 +25,6 @@
   #:use-module (srfi srfi-26)
   #:use-module (commonmark node)
   #:use-module (commonmark common)
-  #:use-module (commonmark entities)
   #:export (parse-inlines))
 
 (define re-start-ticks (make-regexp "^`+"))
@@ -42,8 +41,7 @@
                            (string-append "^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
                                           "[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
                                           "(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)>")))
-(define re-decimal-numeric (make-regexp "^#([0-9]{1,8});"))
-(define re-hexadecimal-numeric (make-regexp "^#[xX]([0-9a-fA-F]{1,8});"))
+
 
 (define (start-ticks? text)
   (regexp-exec re-start-ticks (text-value text) (text-position text)))
@@ -76,11 +74,8 @@
 (define (email-autolink? text)
   (regexp-exec re-email-autolink (text-value text) (text-position text)))
 
-(define (decimal-numeric? text)
-  (regexp-exec re-decimal-numeric (text-value text) (text-position text)))
-
-(define (hexadecimal-numeric? text)
-  (regexp-exec re-hexadecimal-numeric (text-value text) (text-position text)))
+(define (entity-or-numeric? text)
+  (regexp-exec re-entity-or-numeric (text-value text) (text-position text)))
 
 (define (match-length match)
   (string-length (match:substring match 0)))
@@ -480,49 +475,19 @@
         (parse-char text (cons autolink nodes) delim-stack ref-proc)
         (parse-char (text-advance text 1) (cons (make-text-node "<") nodes) delim-stack ref-proc))))
 
+
 (define (parse-entity-numeric text nodes delim-stack ref-proc)
-  (define (numeric-match->text-node match base)
-    (let ((ch (false-if-exception (integer->char (string->number (match:substring match 1) base)))))
-      (make-text-node (string (if (and ch (not (char=? ch #\nul)))
-                                  ch
-                                  #\xfffd)))))
-
-  (define (parse-numeric text)
-    (let ((decimal-match (decimal-numeric? text)))
-      (if decimal-match
-          (parse-char (text-move text (match:end decimal-match 0))
-                      (cons (numeric-match->text-node decimal-match 10) nodes)
-                      delim-stack ref-proc)
-          (let ((hexa-match (hexadecimal-numeric? text)))
-            (if hexa-match
-                (parse-char (text-move text (match:end hexa-match 0))
-                            (cons (numeric-match->text-node hexa-match 16) nodes)
-                            delim-stack ref-proc)
-                (parse-char (text-advance text 1) (cons (make-text-node "&#") nodes)
-                            delim-stack ref-proc))))))
-
-  (define (entity-name text after-entity)
-    (text-substring text (text-position text) (text-position after-entity)))
-
-  (define (parse-entity text)
-    (let ((after-entity (text-advance-skip text char-set:letter+digit)))
-      (case (text-char after-entity)
-        ((#\;)
-         (let* ((entity (entity-name text after-entity))
-                (codepoints (entity->codepoints entity)))
-           (if codepoints
-               (parse-char (text-advance after-entity 1)
-                           (cons (make-text-node (list->string (map integer->char codepoints))) nodes)
-                           delim-stack ref-proc)
-               (parse-char text (cons (make-text-node "&") nodes)
-                           delim-stack ref-proc))))
-        (else (parse-char text (cons (make-text-node "&") nodes)
-                           delim-stack ref-proc)))))
-
-  (let ((after-& (text-advance text 1)))
-    (case (text-char after-&)
-      ((#\#) (parse-numeric after-&))
-      (else (parse-entity after-&)))))
+  (let ((entity-match (entity-or-numeric? text)))
+    (if entity-match
+        (let ((str (entity->string (match:substring entity-match 1))))
+          (if str
+              (parse-char (text-move text (match:end entity-match 0))
+                          (cons (make-text-node str) nodes)
+                          delim-stack ref-proc)
+              (parse-char (text-advance text 1) (cons (make-text-node "&") nodes)
+                          delim-stack ref-proc)))
+        (parse-char (text-advance text 1) (cons (make-text-node "&") nodes)
+                    delim-stack ref-proc))))
 
 (define (parse-normal-text text nodes delim-stack ref-proc)
   (let ((normal-text (normal-text? text)))
