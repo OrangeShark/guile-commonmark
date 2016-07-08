@@ -32,7 +32,8 @@ TESTS =	                                       \
   tests/inlines/hardbreak.scm                  \
   tests/inlines/links.scm                      \
   tests/inlines/images.scm                     \
-  tests/inlines/autolinks.scm
+  tests/inlines/autolinks.scm                  \
+  tests/inlines/entities.scm
 
 TEST_EXTENSIONS = .scm
 

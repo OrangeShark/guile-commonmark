@@ -482,7 +482,10 @@
 
 (define (parse-entity-numeric text nodes delim-stack ref-proc)
   (define (numeric-match->text-node match base)
-    (make-text-node (string (integer->char (string->number (match:substring match 1) base)))))
+    (let ((ch (false-if-exception (integer->char (string->number (match:substring match 1) base)))))
+      (make-text-node (string (if (and ch (not (char=? ch #\nul)))
+                                  ch
+                                  #\xfffd)))))
 
   (define (parse-numeric text)
     (let ((decimal-match (decimal-numeric? text)))
