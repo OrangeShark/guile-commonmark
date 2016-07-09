@@ -127,14 +127,13 @@ purposes of this spec are not valid URIs"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, autolinks backslash-escpaes do not work inside autolinks"
   (match (parse-inlines (make-paragraph "<http://example.com/\\[\\>"))
     (('document doc-data
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "http://example.com/\\[\\"))))
-     (and (destination=? link-data "http://example.com/%5C%5B%5C")
+     (and (destination=? link-data "http://example.com/\\[\\")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 

@@ -600,15 +600,20 @@ left- and right-flanking, because it is followed by punctuation"
      (strong? emphasis-data))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
+(define (destination=? node-data destination)
+  (equal? (assq-ref node-data 'destination) destination))
+
 (test-assert "parse-inlines, emphasis any nonempty sequence of inline elements can
 be the contents of an emphasized span."
   (match (parse-inlines (make-paragraph "*foo [bar](/url)*"))
     (('document doc-data
                 ('paragraph para-data
                             ('emphasis emphasis-data
-                                       ('text text-data2 "foo"))))
-     (strong? emphasis-data))
+                                       ('link link-data
+                                              ('text text-data "bar"))
+                                       ('text text-data2 "foo "))))
+     (and (em? emphasis-data)
+          (destination=? link-data "/url")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, emphasis any nonempty sequence of inline elements can
@@ -761,22 +766,18 @@ delimiter is closed by the first * before bar"
           (em? emphasis-data3)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis indefinite levels of nesting are possible"
   (match (parse-inlines (make-paragraph "*foo [*bar*](/url)*"))
     (('document doc-data
                 ('paragraph para-data
                             ('emphasis emphasis-data1
-                                       ('text text-data1 " bop")
-                                       ('emphasis emphasis-data2
-                                                  ('text text-data2 " bim")
-                                                  ('emphasis emphasis-data3
-                                                             ('text text-data4 "baz"))
-                                                  ('text text-data5 "bar "))
+                                       ('link link-data
+                                              ('emphasis emphasis-data2
+                                                         ('text text-data5 "bar")))
                                        ('text text-data6 "foo "))))
      (and (em? emphasis-data1)
-          (strong? emphasis-data2)
-          (em? emphasis-data3)))
+          (em? emphasis-data2)
+          (destination=? link-data "/url")))
     (x (pk 'fail x #f))))
 
 
@@ -798,15 +799,17 @@ delimiter is closed by the first * before bar"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, any nonempty sequence of inline elements can be the
 contents of a strongly emphasized span"
   (match (parse-inlines (make-paragraph "**foo [bar](/url)**"))
     (('document doc-data
                 ('paragraph para-data
-                            ('text text-data1 " is not an empty strong emphasis")
-                            ('text text-data2 "****")))
-     #t)
+                            ('emphasis emphasis-data1
+                                       ('link link-data
+                                              ('text text-data "bar"))
+                                       ('text text-data "foo "))))
+     (and (strong? emphasis-data1)
+          (destination=? link-data "/url")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, any nonempty sequence of inline elements can be the
@@ -945,22 +948,18 @@ emphasis"
           (strong? emphasis-data3)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, emphasis indefinite levels of nesting are possible"
   (match (parse-inlines (make-paragraph "**foo [*bar*](/url)**"))
     (('document doc-data
                 ('paragraph para-data
                             ('emphasis emphasis-data1
-                                       ('text text-data5 " bop")
-                                       ('emphasis emphasis-data2
-                                                  ('text text-data4 "\nbim")
-                                                  ('emphasis emphasis-data3
-                                                             ('text text-data3 "baz"))
-                                                  ('text text-data1 "bar "))
+                                       ('link link-data
+                                              ('emphasis emphasis-data2
+                                                         ('text text-data1 "bar")))
                                        ('text text-data2 "foo "))))
      (and (strong? emphasis-data1)
           (em? emphasis-data2)
-          (strong? emphasis-data3)))
+          (destination=? link-data "/url")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, there can be no empty emphasis or strong emphasis"
@@ -1330,29 +1329,30 @@ long sequences of delimiters"
      (em? emphasis-data1))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 5)
 (test-assert "parse-inlines, emphasis rule 17"
   (match (parse-inlines (make-paragraph "*[bar*](/url)"))
     (('document doc-data
                 ('paragraph para-data
-                            ('emphasis emphasis-data1
-                                       ('text text-data1 "bar baz"))
-                            ('text text-data2 "foo ")
-                            ('text text-data3 "*")))
-     (em? emphasis-data1))
+                            ('link link-data
+                                   ('text text-data "*")
+                                   ('text text-data2 "bar"))
+                            ('text text-data "*")))
+     (destination=? link-data "/url"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, emphasis rule 17"
   (match (parse-inlines (make-paragraph "_foo [bar_](/url)"))
     (('document doc-data
                 ('paragraph para-data
-                            ('emphasis emphasis-data1
-                                       ('text text-data1 "bar baz"))
-                            ('text text-data2 "foo ")
-                            ('text text-data3 "*")))
-     (em? emphasis-data1))
+                            ('link link-data
+                                   ('text text-data "_")
+                                   ('text text-data2 "bar"))
+                            ('text text-data "foo ")
+                            ('text text-data "_")))
+     (destination=? link-data "/url"))
     (x (pk 'fail x #f))))
 
+(test-expect-fail 3)
 (test-assert "parse-inlines, emphasis rule 17"
   (match (parse-inlines (make-paragraph "*<img src=\"foo\" title=\"*\"/>"))
     (('document doc-data
@@ -1406,25 +1406,26 @@ long sequences of delimiters"
      (em? emphasis-data1))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-inlines, emphasis rule 17"
   (match (parse-inlines (make-paragraph "**a<http://foo.bar/?q**>"))
     (('document doc-data
                 ('paragraph para-data
-                            ('emphasis emphasis-data1
-                                       ('code-span code-data1 "_")
-                                       ('text text-data1 "a "))))
-     (em? emphasis-data1))
+                            ('link link-data
+                                   ('text text-data1 "http://foo.bar/?q**"))
+                            ('text text-data "a")
+                            ('text text-data "**")))
+     (destination=? link-data "http://foo.bar/?q**"))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, emphasis rule 17"
   (match (parse-inlines (make-paragraph "__a<http://foo.bar/?q=__>"))
     (('document doc-data
                 ('paragraph para-data
-                            ('emphasis emphasis-data1
-                                       ('code-span code-data1 "_")
-                                       ('text text-data1 "a "))))
-     (em? emphasis-data1))
+                            ('link link-data
+                                   ('text text-data1 "http://foo.bar/?q=__"))
+                            ('text text-data "a")
+                            ('text text-data "__")))
+     (destination=? link-data "http://foo.bar/?q=__"))
     (x (pk 'fail x #f))))
 
 (test-end)

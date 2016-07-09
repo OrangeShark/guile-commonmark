@@ -165,16 +165,14 @@
      #t)
     (x (pk 'fail x #f))))
 
-;; TODO autolink
-(test-expect-fail 1)
 (test-assert "parse-inlines, code spans have same precedence as autolink, autolink"
   (match (parse-inlines (make-paragraph "<http://foo.bar.`baz>`"))
     (('document doc-data
                 ('paragraph para-data
                             ('text text-data2
-                                   "baz>`")
-                            ('code-span code-data
-                                        "<http://foo.bar.")))
+                                   "`")
+                            ('link link-data
+                                   ('text text-data "http://foo.bar.`baz"))))
      #t)
     (x (pk 'fail x #f))))
 

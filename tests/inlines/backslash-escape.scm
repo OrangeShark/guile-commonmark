@@ -98,11 +98,10 @@
     (x (pk 'fail x #f))))
 
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, escaped characters are treated as regular characters and do not have
 their usual Markdown meanings"
   (match (parse-inlines (make-paragraph (string-append "\\*not emphasized*\n"
-                                                       "\\<br/> not a tag\n"
+                                                       "\\<http://example.com> not a autolink\n"
                                                        "\\[not a link](/foo)\n"
                                                        "\\`not code`"))) 
     (('document doc-data
@@ -111,10 +110,10 @@ their usual Markdown meanings"
                             ('text text-data "not code")
                             ('text text-data "`")
                             ('softbreak softbreak-data)
-                            ('text text-data "not a link](/(foo)")
+                            ('text text-data "not a link](/foo)")
                             ('text text-data "[")
                             ('softbreak softbreak-data)
-                            ('text text-data "br/> not a tag")
+                            ('text text-data "http://example.com> not a autolink")
                             ('text text-data "<")
                             ('softbreak softbreak-data)
                             ('text text-data "*")
