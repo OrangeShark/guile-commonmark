@@ -525,16 +525,16 @@ tags, code spans, and autolinks over link grouping"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, link these cases illustrate the precedence of HTML,
 tags, code spans, and autolinks over link grouping"
-  (match (parse-inlines (make-paragraph "[foo<http://example.com/?search=](uri)"))
+  (match (parse-inlines (make-paragraph "[foo<http://example.com/?search=](uri)>"))
     (('document doc-data
                 ('paragraph para-data
-                            ('code-span code-data "](/uri)")
+                            ('link link-data
+                                   ('text text-data "http://example.com/?search=](uri)"))
                             ('text text-data "foo")
                             ('text text-data "[")))
-     #t)
+     (destination=? link-data "http://example.com/?search=](uri)"))
     (x (pk 'fail x #f))))
 
 ;; full reference links
@@ -703,7 +703,6 @@ code spans, and autolinks"
      #t)
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, full reference link text precedence lower than HTML tags,
 code spans, and autolinks"
   (match (parse-inlines (make-document "[foo<http://example.com/?search=][ref]>"
@@ -711,10 +710,10 @@ code spans, and autolinks"
     (('document doc-data
                 ('paragraph para-data
                             ('link link-data
-                                   ('text text-data "http://example.com/?serarch=](uri)"))
+                                   ('text text-data "http://example.com/?search=][ref]"))
                             ('text text-data "foo")
                             ('text text-data "[")))
-     (and (destination=? link-data "http://example.com/?search=](uri)")))
+     (and (destination=? link-data "http://example.com/?search=][ref]")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link matching is case-insensitive"

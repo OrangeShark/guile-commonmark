@@ -361,6 +361,9 @@
                            (text-advance text 1)
                            (loop (text-advance text 1) (- open-bracket-count 1))))
                 ((#\`) (loop (text-move text (parse-ticks text)) open-bracket-count))
+                ((#\<) (let-values (((autolink autolink-text) (parse-autolink text)))
+                         (loop (if autolink autolink-text (text-advance autolink-text 1))
+                                open-bracket-count)))
                 ((#\\) (loop (text-advance text 2) open-bracket-count))
                 (else (loop (text-advance text 1) open-bracket-count)))))))
 
