@@ -160,11 +160,20 @@
                (x (pk 'fail x #f))))
 
 (test-assert "parse-blocks, fenced code coding fence cannot have info strings"
-             (match (call-with-input-string "```\n``` aaa\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data "``` aaa"))
-                (not (equal? (info-string code-data) "aaa")))
-               (x (pk 'fail x #f))))
+  (match (call-with-input-string "```\n``` aaa\n```" parse-blocks)
+    (('document doc-data
+                ('fenced-code code-data "``` aaa"))
+     (not (equal? (info-string code-data) "aaa")))
+    (x (pk 'fail x #f))))
+
+(test-assert "parse-blocks, fenced code info string is escaped"
+  (match (call-with-input-string (string-append "```f&ouml;&ouml;\n"
+                                                "foo\n"
+                                                "```") parse-blocks)
+    (('document doc-data
+                ('fenced-code code-data "foo"))
+     (equal? (info-string code-data) "föö"))
+    (x (pk 'fail x #f))))
 
 (test-end)
 

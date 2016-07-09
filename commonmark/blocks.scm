@@ -259,7 +259,7 @@
   (make-fenced-code-node 
    `((fence . ,(match:substring match 1))
      (fence-start . ,(match:start match 1))
-     (info-string . ,(string-trim-both (match:substring match 2))))))
+     (info-string . ,(unescape-string (string-trim-both (match:substring match 2)))))))
 
 (define (make-bullet-list-marker match)
   (make-list-node (make-item (match:suffix match) (match:end match 1) (match:substring match 2))
