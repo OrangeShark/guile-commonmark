@@ -128,7 +128,7 @@ pointy brackets"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (destination=? link-data "\\(foo\\)")
+     (and (destination=? link-data "(foo)")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
@@ -159,7 +159,7 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (destination=? link-data "foo(and\\(bar\\))")
+     (and (destination=? link-data "foo(and(bar))")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
@@ -180,7 +180,7 @@ escape or use the <...> form"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (destination=? link-data "foo\\)\\:")
+     (and (destination=? link-data "foo):")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
@@ -225,7 +225,6 @@ a backslash"
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-inlines, link url-escaping should be left alone and entity and
 numerical character references in the destination will be parsed into the corresponding
 Unicode code points"
@@ -234,7 +233,7 @@ Unicode code points"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (destination=? link-data "foo%20b%C3%A4")
+     (and (destination=? link-data "foo%20bä")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
@@ -245,7 +244,7 @@ try to omit the destination and keep the title, you'll get unexpected results"
                 ('paragraph para-data
                             ('link link-data
                                        ('text text-data "link"))))
-     (and (destination=? link-data "%22title%22")
+     (and (destination=? link-data "\"title\"")
           (title=? link-data #f)))
     (x (pk 'fail x #f))))
 
@@ -279,7 +278,6 @@ try to omit the destination and keep the title, you'll get unexpected results"
           (title=? link-data "title")))
     (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, link backslash escapes and entity and numeric character
 references may be used in titles"
   (match (parse-inlines (make-paragraph "[link](/url \"title \\\"&quot;\")"))
@@ -288,7 +286,7 @@ references may be used in titles"
                             ('link link-data
                                        ('text text-data "link"))))
      (and (destination=? link-data "/url")
-          (title=? link-data "title &quot;&quot;")))
+          (title=? link-data "title \"\"")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, link nested balanced quotes are not allowed without escaping"
@@ -712,10 +710,11 @@ code spans, and autolinks"
                                        '(("ref" "/uri" #f))))
     (('document doc-data
                 ('paragraph para-data
-                            ('code-span code-data "][ref]")
+                            ('link link-data
+                                   ('text text-data "http://example.com/?serarch=](uri)"))
                             ('text text-data "foo")
                             ('text text-data "[")))
-     #t)
+     (and (destination=? link-data "http://example.com/?search=](uri)")))
     (x (pk 'fail x #f))))
 
 (test-assert "parse-inlines, full reference link matching is case-insensitive"

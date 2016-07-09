@@ -372,8 +372,8 @@
       (let* ((link-text (link-label link-text))
              (link-text-nodes (parse-char (make-text link-text 0) '() (make-empty-delim-stack) ref-proc)))
         (make-node link-text-nodes
-                   (or dest "")
-                   (and title (remove-quotes title)))))
+                   (unescape-string (or dest ""))
+                   (and title (unescape-string (remove-quotes title))))))
     (define (parse-title link-text dest-match after-space whitespace)
       (let ((title-match (link-title? after-space)))
         (cond ((and title-match whitespace)

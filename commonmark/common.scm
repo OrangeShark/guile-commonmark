@@ -83,7 +83,8 @@
     (let ((str (match:substring m 0)))
       (if (char=? (string-ref str 0) #\\)
           (string (string-ref str 1))
-          (or (entity->string (substring str 1 (- (string-length str) 1)))
+          (or (and (> (string-length str) 1)
+                   (entity->string (substring str 1 (- (string-length str) 1))))
               str))))
   (regexp-substitute/global #f re-escaped-or-entity str
                             'pre replace 'post))

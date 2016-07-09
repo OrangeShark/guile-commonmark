@@ -115,7 +115,6 @@
 (define (title=? node-data title)
   (equal? (assq-ref node-data 'title) title))
 
-(test-expect-fail 1)
 (test-assert "parse-inlines, entity and numeric character references are recognized in any context
 besides code spans or code blocks, including URLs, link titles, and fenced code block info strings"
   (match (parse-inlines (make-paragraph "[foo](/f&ouml;&ouml; \"f&ouml;&ouml;\")"))
@@ -123,7 +122,7 @@ besides code spans or code blocks, including URLs, link titles, and fenced code 
                 ('paragraph para-data
                             ('link link-data
                                    ('text text-data "foo"))))
-     (and (destination=? link-data "/f%C3%B6%C3%B6")
+     (and (destination=? link-data "/föö")
           (title=? link-data "föö")))
     (x (pk 'fail x #f))))
 
