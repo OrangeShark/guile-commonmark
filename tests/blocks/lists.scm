@@ -282,7 +282,6 @@
 (define (list-tight? data)
   (assq-ref data 'tight))
 
-(test-expect-fail 4)
 (test-assert "parse-blocks, list with a blank line between items is loose"
              (match (call-with-input-string
                      (string-append "- a\n"
@@ -362,8 +361,6 @@
                                          ('paragraph para-data1
                                                      ('text text-data1 "d")))
                                   ('item item-data2
-                                         ('paragraph para-data2
-                                                     ('text text-data2 ""))
                                          ('paragraph para-data3
                                                      ('text text-data3 "b")))
                                   ('item item-data3
@@ -395,7 +392,6 @@
                 (list-tight? list-data))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 1)
 (test-assert "parse-blocks, list is tight even if a sublist is loose"
              (match (call-with-input-string
                      (string-append "- a\n"
@@ -496,7 +492,6 @@
                      (list-tight? list-data2)))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 3)
 (test-assert "parse-blocks, list is loose if blank line between two block elements"
              (match (call-with-input-string
                      (string-append "1. ```\n"
@@ -514,6 +509,7 @@
                 (not (list-tight? list-data1)))
                (x (pk 'fail x #f))))
 
+(test-expect-fail 2)
 (test-assert "parse-blocks, outer list is loose and inner list tight"
              (match (call-with-input-string
                      (string-append "* foo\n"

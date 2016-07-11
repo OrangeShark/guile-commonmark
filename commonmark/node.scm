@@ -210,7 +210,7 @@
 ;; represents a item which can only be in a list
 ;; Node -> Node
 (define (make-item-node node padding)
-  (make-node 'item `((padding . ,padding)) (list node) #;
+  (make-node 'item `((padding . ,padding))
              (if (or (not node) (blank-node? node))
                  '()
                  (list node))))
