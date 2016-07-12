@@ -509,64 +509,65 @@
                 (not (list-tight? list-data1)))
                (x (pk 'fail x #f))))
 
-(test-expect-fail 2)
 (test-assert "parse-blocks, outer list is loose and inner list tight"
-             (match (call-with-input-string
-                     (string-append "* foo\n"
-                                    "  * bar\n"
-                                    "\n"
-                                    "  baz")
-                     parse-blocks)
-               (('document doc-data
-                           ('list list-data1
-                                  ('item item-data1
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "baz"))
-                                         ('list list-data2
-                                                ('item item-data2
-                                                       ('paragraph para-data1
-                                                                   ('text text-data1 "bar"))))
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "foo"))
-                                        )))
-                (and (not (list-tight? list-data1))
-                     (list-tight? list-data2)))
-               (x (pk 'fail x #f))))
+  (match (call-with-input-string
+             (string-append "* foo\n"
+                            "  * bar\n"
+                            "\n"
+                            "  baz")
+           parse-blocks)
+    (('document doc-data
+                ('list list-data1
+                       ('item item-data1
+                              ('paragraph para-data1
+                                          ('text text-data1 "baz"))
+                              ('list list-data2
+                                     ('item item-data2
+                                            ('paragraph para-data1
+                                                        ('text text-data1 "bar"))))
+                              ('paragraph para-data1
+                                          ('text text-data1 "foo")))))
+     (and (not (list-tight? list-data1))
+          (list-tight? list-data2)))
+    (x (pk 'fail x #f))))
 
+(test-expect-fail 1)
 (test-assert "parse-blocks, outer list is loose and inner list tight"
-             (match (call-with-input-string
-                     (string-append "- a\n"
-                                    "  - b\n"
-                                    "  - c\n"
-                                    "\n"
-                                    "- d\n"
-                                    "  - e\n"
-                                    "  - f")
-                     parse-blocks)
-               (('document doc-data
-                           ('list list-data1
-                                  ('item item-data1
-                                         ('list list-data2
-                                                ('item item-data2
-                                                       ('paragraph para-data2
-                                                                   ('text text-data2 "f")))
-                                                ('item item-data3
-                                                       ('paragraph para-data3
-                                                                   ('text text-data3 "e"))))
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "d")))
-                                  ('item item-data4
-                                         ('list list-data3
-                                                ('item item-data4
-                                                       ('paragraph para-data4
-                                                                   ('text text-data4 "c")))
-                                                ('item item-data5
-                                                       ('paragraph para-data5
-                                                                   ('text text-data5 "b"))))
-                                         ('paragraph para-data6
-                                                     ('text text-data6 "a")))))
-                #t)
-               (x (pk 'fail x #f))))
+  (match (call-with-input-string
+             (string-append "- a\n"
+                            "  - b\n"
+                            "  - c\n"
+                            "\n"
+                            "- d\n"
+                            "  - e\n"
+                            "  - f")
+           parse-blocks)
+    (('document doc-data
+                ('list list-data1
+                       ('item item-data1
+                              ('list list-data2
+                                     ('item item-data2
+                                            ('paragraph para-data2
+                                                        ('text text-data2 "f")))
+                                     ('item item-data3
+                                            ('paragraph para-data3
+                                                        ('text text-data3 "e"))))
+                              ('paragraph para-data1
+                                          ('text text-data1 "d")))
+                       ('item item-data4
+                              ('list list-data3
+                                     ('item item-data5
+                                            ('paragraph para-data5
+                                                        ('text text-data5 "c")))
+                                     ('item item-data6
+                                            ('paragraph para-data6
+                                                        ('text text-data6 "b"))))
+                              ('paragraph para-data4
+                                          ('text text-data4 "a")))))
+     (and (not (list-tight? list-data1))
+          (list-tight? list-data2)
+          (list-tight? list-data3)))
+    (x (pk 'fail x #f))))
 
 (test-end)
 

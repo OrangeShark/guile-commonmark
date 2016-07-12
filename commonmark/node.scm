@@ -73,6 +73,8 @@
             replace-last-child
             remove-last-child
             open-descendant?
+            prev-node?
+            prev-node-closed?
             print-node))
 
 ;; Node-Type is one of:
@@ -347,6 +349,20 @@
          #t)
         ((no-children? node) #f)
         (else (open-descendant? (last-child node) node-type))))
+
+(define (prev-node? node node-type)
+  (let loop ((count 1)
+             (children (node-children node)))
+    (cond ((null? children) #f)
+          ((= count 0) (node-type? (car children) node-type))
+          (else (loop (- count 1) (cdr children))))))
+
+(define (prev-node-closed? node)
+  (let loop ((count 1)
+             (children (node-children node)))
+    (cond ((null? children) #f)
+          ((= count 0) (node-closed? (car children)))
+          (else (loop (- count 1) (cdr children))))))
 
 (define (print-node n)
   (define (inner n d)
