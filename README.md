@@ -36,7 +36,14 @@ Requirements
 Installation
 ------------
 
-To build from git requires Autoconf, Automake, and Make.
+Download the latest tarball and run:
+```sh
+./configure --prefix=<guile-prefix>
+make
+sudo make install
+```
+
+To build from git requires Autoconf and Automake.
 ```sh
 ./bootstrap
 ./configure

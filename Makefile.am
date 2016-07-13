@@ -40,4 +40,6 @@ TEST_EXTENSIONS = .scm
 SCM_LOG_COMPILER = $(top_builddir)/test-env $(GUILE)
 AM_SCM_LOG_FLAGS = --no-auto-compile -L "$(top_srcdir)"
 
-EXTRA_DIST += pre-inst-env.in
+EXTRA_DIST += README.md                        \
+              pre-inst-env.in                  \
+              test-env.in

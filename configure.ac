@@ -1,5 +1,5 @@
 
-AC_INIT([commonmark], [0.1.dev])
+AC_INIT([guile-commonmark], [0.1])
 AC_CONFIG_SRCDIR(commonmark)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
