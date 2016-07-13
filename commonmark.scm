@@ -20,8 +20,7 @@
   #:use-module (commonmark inlines)
   #:use-module (commonmark node)
   #:use-module (commonmark sxml)
-  #:export (commonmark->sxml
-            parse-text))
+  #:export (commonmark->sxml))
 
 
 (define* (commonmark->sxml #:optional (string-or-port (current-input-port)))
@@ -31,7 +30,3 @@ the current input port into SXML."
                   (open-input-string string-or-port)
                   string-or-port)))
     (document->sxml (parse-inlines (parse-blocks port)))))
-
-
-(define (parse-text s)
-  (print-node (parse-blocks (open-input-string s))))

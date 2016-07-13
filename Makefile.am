@@ -42,4 +42,5 @@ AM_SCM_LOG_FLAGS = --no-auto-compile -L "$(top_srcdir)"
 
 EXTRA_DIST += README.md                        \
               pre-inst-env.in                  \
-              test-env.in
+              test-env.in                      \
+              $(TESTS)
