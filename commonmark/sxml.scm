@@ -80,11 +80,21 @@
     ((bullet) 'ul)
     (else 'ol)))
 
+(define (list-tight? node)
+  (assq-ref (node-data node) 'tight))
+
 (define (list-node->sxml n)
-  `(,(list-type n) ,@(fold-nodes item-node->sxml (node-children n))))
+  `(,(list-type n) ,@(if (list-tight? n)
+                         (fold-nodes tight-item-node->sxml (node-children n))
+                         (fold-nodes item-node->sxml (node-children n)))))
 
 (define (item-node->sxml n)
   `(li ,@(fold-nodes node->sxml (node-children n))))
+
+(define (tight-item-node->sxml node)
+  `(li ,@(if (paragraph-node? (last-child node))
+             (fold-nodes node->sxml (node-children (last-child node)))
+             (fold-nodes node->sxml (node-children node)))))
 
 (define (softbreak-node->sxml n)
   "\n")
