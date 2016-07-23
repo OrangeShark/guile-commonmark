@@ -444,14 +444,14 @@
 
 (define image? (make-link-parser
                 (lambda (text ref-proc)
-                  (link-text? text ref-proc #t))
+                  (and (not (text-end? text)) (link-text? text ref-proc #t)))
                 make-image-node))
 
 (define (parse-image text nodes delim-stack ref-proc)
   (let-values (((image text) (image? (text-advance text 1) ref-proc)))
     (if image
         (parse-char text (cons image nodes) delim-stack ref-proc)
-        (parse-char (text-advance text 1) (cons (make-text-node "![") nodes) delim-stack ref-proc))))
+        (parse-char text (cons (make-text-node "!") nodes) delim-stack ref-proc))))
 
 (define (parse-link text nodes delim-stack ref-proc)
   (let-values (((link text) (link? text ref-proc)))
