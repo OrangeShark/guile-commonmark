@@ -335,14 +335,6 @@
              (node-data node)
              (rest-children node)))
 
-(define (fold-node f n)
-  (cond ((not (node? n)) n)
-        (else (f (make-node (node-type n)
-                            (node-data n)
-                            (fold (cut cons (fold-node f <>) <>)
-                                  '()
-                                  (node-children n)))))))
-
 (define (open-descendant? node node-type)
   (cond ((not (node? node)) #f)
         ((and (node-type? node node-type) (not (node-closed? node)))
