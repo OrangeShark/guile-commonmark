@@ -19,7 +19,7 @@ Example
 
     this is some code
 
-A regular paragraph"
+A regular paragraph")
 
 ;; Parses the CommonMark.
 (define doc-sxml (commonmark->sxml doc))
