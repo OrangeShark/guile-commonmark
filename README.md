@@ -52,6 +52,11 @@ make
 make install
 ```
 
+To install from a recent version of git using Guix.
+```sh
+guix package -f guix.scm
+```
+
 License
 -------
 LGPLv3 or later. See COPYING.LESSER and COPYING

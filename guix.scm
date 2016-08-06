@@ -1,27 +1,41 @@
 (use-modules (guix packages)
              (guix licenses)
              (guix build-system gnu)
-             (guix download)
-             (gnu packages guile))
+             (guix git-download)
+             (gnu packages guile)
+             (gnu packages autotools)
+             (gnu packages pkg-config))
 
 (package
   (name "guile-commonmark")
-  (version "0.1")
+  (version "6a1f15f")
   (source
    (origin
-     (method url-fetch)
-     (uri 
-       (string-append "https://github.com/OrangeShark/guile-commonmark/releases/download/v"
-                      version "/guile-commonmark-" version ".tar.gz"))
+     (method git-fetch)
+     (uri (git-reference
+           (url "https://github.com/OrangeShark/guile-commonmark.git")
+           (commit version)))
      (sha256
       (base32
-        "12cb5fqvvgc87f5xp0ih5az305wnjia89l5jba83d0r2p8bfy0b0"))))
+        "04ms67pphlnk8fm1n5p7nkkz4hcnhyqdkrcg3fb1m6s2ynmca780"))))
   (build-system gnu-build-system)
+  (arguments
+   '(#:phases
+     (modify-phases %standard-phases
+       (add-after 'unpack 'bootstrap
+         (lambda _ (zero? (system* "sh" "bootstrap")))))))
+  (native-inputs
+   `(("autoconf" ,autoconf)
+     ("automake" ,automake)
+     ("pkg-config" ,pkg-config)))
   (inputs
    `(("guile" ,guile-2.0)))
-  (synopsis "CommonMark parser for GNU Guile")
+  (synopsis "CommonMark parser for Guile")
   (description
    "guile-commonmark is a library for parsing CommonMark, a fully specified
-variant of Markdown.")
++variant of Markdown.  The library is written in Guile Scheme and is designed
++to transform a CommonMark document to SXML.  guile-commonmark tries to closely
++follow the @uref{http://commonmark.org/, CommonMark spec}, the main difference
++is no support for parsing block and inline level HTML.")
   (home-page "https://github.com/OrangeShark/guile-commonmark")
   (license lgpl3+))
