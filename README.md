@@ -32,6 +32,7 @@ Requirements
 ------------
 
  - [GNU Guile](https://www.gnu.org/software/guile/) >= 2.0.11
+ - [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config)
 
 Installation
 ------------

@@ -1,7 +1,7 @@
 include guile.am
 
-moddir=$(prefix)/share/guile/site/2.0
-godir=$(prefix)/share/guile/site/2.0
+moddir=$(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
+godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/ccache
 
 SOURCES =                           \
   commonmark/utils.scm              \
