@@ -105,6 +105,7 @@
         ((list-node? n) (parse-list n l))
         ((paragraph-node? n) (parse-paragraph n l))))
 
+
 (define (parse-block-quote n l)
   (cond ((block-quote? l) => (lambda (rest-line)
                                (parse-container-block n (match:suffix rest-line))))
@@ -373,3 +374,31 @@
                                                (node-data n)
                                                v)
                                     d))))))
+
+;; Close block code
+
+(define (close-block node)
+  (cond ((document-node? node) (close-document node))
+        ((block-quote-node? node) (close-block-quote node))
+        ((code-block-node? node) (close-code-block node))
+        ((fenced-code-node? node) (close-fenced-code node))
+        ((list-node? node) (close-list node))
+        ((paragraph-node? node)) (close-paragraph node)))
+
+(define (close-document node)
+  node)
+
+(define (close-block-quote node)
+  node)
+
+(define (close-code-block node)
+  node)
+
+(define (close-fenced-code node)
+  node)
+
+(define (close-list node)
+  node)
+
+(define (close-paragraph node)
+  node)
