@@ -92,7 +92,8 @@
   `(li ,@(fold-nodes node->sxml (node-children n))))
 
 (define (tight-item-node->sxml node)
-  `(li ,@(if (paragraph-node? (last-child node))
+  `(li ,@(if (and (not (null? (node-children node)))
+                  (paragraph-node? (last-child node)))
              (fold-nodes node->sxml (node-children (last-child node)))
              (fold-nodes node->sxml (node-children node)))))
 
