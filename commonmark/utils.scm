@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015, 2016  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -18,8 +18,7 @@
 (define-module (commonmark utils)
   #:use-module (ice-9 rdelim)
   #:export (filter-map&co
-            expand-tabs
-            read-tabless-line))
+            read-line-without-nul))
 
 
 (define (filter-map&co f l k)
@@ -32,29 +31,18 @@
                                     (k (if v (cons v v2) v2) (append d d2))))))))
 
 
-;; String -> String
-(define (expand-tabs line)
-  "Expands the tabs of the string line into spaces"
-  (list->string
-   (let loop ((l (string->list line)) (c 1))
-     (cond [(null? l) '()]
-           [(char=? #\tab (car l))
-            (if (= (remainder c 4) 0)
-                (cons #\space
-                      (loop (cdr l) (1+ c)))
-                (cons #\space
-                      (loop l (1+ c))))]
-           [else (cons (car l)
-                       (loop (cdr l) (1+ c)))]))))
 
 ;; Line is one of:
 ;;  - String
 ;;  - eof-object
 
 ;; Port -> Line
-(define (read-tabless-line p)
-  "read a line from port p and expands any tabs"
-  (let ((line (read-line p)))
-    (if (eof-object? line)
-        line
-        (expand-tabs line))))
+(define (read-line-without-nul port)
+  "Return a line of text from PORT replacing '\0' with '\uFFFD' or
+returns eof-object."
+  (define (replace-nul x)
+    (if (char=? x #\nul) #\xFFFD x))
+  (let ((line (read-line port)))
+    (cond ((eof-object? line) line)
+          ((string-any #\nul line) (string-map replace-nul line))
+          (else line))))

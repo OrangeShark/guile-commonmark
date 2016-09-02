@@ -82,18 +82,17 @@
 
 
 ;; Port -> Document
-;; parses commonmark by blocks and creates a document containing blocks
-;; !!!
-(define (parse-blocks p)
+(define (parse-blocks port)
+  "Parses CommonMark blocks from PORT returning a CommonMark Document tree"
   (let loop ((root (make-document-node))
-             (line (read-tabless-line p)))
+             (line (read-line-without-nul port)))
     (if (eof-object? line)
         (parse-clean-up root (lambda (doc references)
                                (if (null? references)
                                    doc
                                    (node-add-data doc 'link-references references))))
         (loop (parse-open-block root line)
-              (read-tabless-line p)))))
+              (read-line-without-nul port)))))
 
 ;; Node String -> Node
 (define (parse-open-block n l)
