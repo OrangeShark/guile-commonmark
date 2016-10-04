@@ -6,6 +6,7 @@ godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/ccache
 SOURCES =                           \
   commonmark/utils.scm              \
   commonmark/common.scm             \
+  commonmark/parser.scm             \
   commonmark/entities.scm           \
   commonmark/node.scm               \
   commonmark/blocks.scm             \
