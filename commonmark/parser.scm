@@ -134,18 +134,18 @@
 (define re-thematic-break (make-regexp "^((\\*[ \t]*){3,}|(_[ \t]*){3,}|(-[ \t]*){3,})[ \t]*$"))
 (define re-atx-heading (make-regexp "^(#{1,6})([ \t]+|$)"))
 (define re-atx-heading-end (make-regexp "([ \t]+#+[ \t]*)$|(^#+[ \t]*)$"))
-(define re-setext-heading (make-regexp "^(=+|-+) *$"))
+(define re-setext-heading (make-regexp "^(=+|-+)[ \t]*$"))
 (define re-empty-line (make-regexp "^[ \t]*$"))
 (define re-fenced-code (make-regexp "^(```+|~~~+)([^`]*)$"))
 (define re-bullet-list-marker (make-regexp "^([-+*])([ \t]|$)"))
 (define re-ordered-list-marker (make-regexp "^([0-9]{1,9})([.)])([ \t]|$)"))
 (define re-link-definition (make-regexp (string-append "^"
                                                        link-label
-                                                       ": *\n? *"
+                                                       ":[ \t\v]*\n?[ \t\v]*"
                                                        link-destination
-                                                       "( +| *\n? *)"
+                                                       "([ \t\v]+|[ \t\v]*\n?[ \t\v]*)"
                                                        link-title
-                                                       "? *(\n|$)")))
+                                                       "?[ \t\v]*(\n|$)")))
 
 
 (define (block-quote parser)

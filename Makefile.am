@@ -16,6 +16,7 @@ SOURCES =                           \
 
 TESTS =	                                       \
   tests/node.scm                               \
+  tests/tabs.scm                               \
   tests/blocks/paragraphs.scm                  \
   tests/blocks/atx-headings.scm                \
   tests/blocks/block-quotes.scm                \
