@@ -76,7 +76,7 @@
 \tbar"
   ('document _
              ('list _
-                    ('list-item _
+                    ('item _
                                 ('paragraph _ ('text _ "bar"))
                                 ('paragraph _ ('text _ "foo"))))))
 

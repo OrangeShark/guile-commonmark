@@ -35,7 +35,6 @@
             atx-heading
             atx-heading-content
             atx-heading-opening
-            code-block
             empty-line
             thematic-break
             setext-heading
@@ -129,7 +128,16 @@
   (>= (- (parser-col end) (parser-col start)) code-indent))
 
 (define (parser-rest-str parser)
-  (substring (parser-str parser) (parser-pos parser)))
+  (let ((str (parser-str parser))
+        (pos (parser-pos parser)))
+    (if (or (>= pos (string-length str))
+            (not (char=? (string-ref str pos) #\tab)))
+        (substring str pos)
+        (let* ((col (parser-col parser))
+               (expand (- 4 (modulo col 4))))
+          (if (= expand 0)
+              (substring str pos)
+              (string-append (make-string expand #\space) (substring str (+ pos 1))))))))
 
 (define re-thematic-break (make-regexp "^((\\*[ \t]*){3,}|(_[ \t]*){3,}|(-[ \t]*){3,})[ \t]*$"))
 (define re-atx-heading (make-regexp "^(#{1,6})([ \t]+|$)"))
