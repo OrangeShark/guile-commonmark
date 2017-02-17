@@ -19,7 +19,6 @@
              (srfi srfi-26)
              (srfi srfi-64)
              (ice-9 match)
-             (commonmark blocks)
              (tests utils))
 
 (test-begin "tabs")

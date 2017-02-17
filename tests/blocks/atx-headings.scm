@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,122 +15,177 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks atx-headings)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-1)
+             (srfi srfi-26)
+             (srfi srfi-64)
+             (ice-9 match)
+             (tests utils)
+             (commonmark blocks))
 
 (test-begin "blocks atx-headings")
 
-(define (heading-level heading-data)
-  (assq-ref heading-data 'level))
+(block-expect "parse-blocks, atx headings"
+  "# foo
+## foo
+### foo
+#### foo
+##### foo
+###### foo"
+  ('document _
+             ('heading heading-data6
+                       ('text _ "foo"))
+             ('heading heading-data5
+                       ('text _ "foo"))
+             ('heading heading-data4
+                       ('text _ "foo"))
+             ('heading heading-data3
+                       ('text _ "foo"))
+             ('heading heading-data2
+                       ('text _ "foo"))
+             ('heading heading-data1
+                       ('text _ "foo")))
+  (heading-level heading-data6) 6
+  (heading-level heading-data5) 5
+  (heading-level heading-data4) 4
+  (heading-level heading-data3) 3
+  (heading-level heading-data2) 2
+  (heading-level heading-data1) 1)
 
-(test-assert "parse-blocks, atx headings"
-             (match (call-with-input-string
-                     "# foo\n## foo\n### foo\n#### foo\n##### foo\n###### foo" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data6
-                                    ('text text-data6 "foo"))
-                           ('heading heading-data5
-                                    ('text text-data5 "foo"))
-                           ('heading heading-data4
-                                    ('text text-data4 "foo"))
-                           ('heading heading-data3
-                                    ('text text-data3 "foo"))
-                           ('heading heading-data2
-                                    ('text text-data2 "foo"))
-                           ('heading heading-data1
-                                    ('text text-data1 "foo")))
-                (and (eq? (heading-level heading-data6) 6)
-                     (eq? (heading-level heading-data5) 5)
-                     (eq? (heading-level heading-data4) 4)
-                     (eq? (heading-level heading-data3) 3)
-                     (eq? (heading-level heading-data2) 2)
-                     (eq? (heading-level heading-data1) 1)))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings not more than 6 #"
+  "####### foo"
+  ('document _
+             ('paragraph _
+                         ('text _ "####### foo"))))
 
-(test-assert "parse-blocks, atx headings not more than 6 #"
-             (match (call-with-input-string "####### foo" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                      ('text text-data "####### foo")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings requires an empty space"
+  "#5 bolt
 
-(test-assert "parse-blocks, atx headings requires an empty space"
-             (match (call-with-input-string "#hashtag" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "#hashtag")))
-                #t)
-               (x (pk 'fail x #f))))
+#hashtag"
+  ('document _ 
+             ('paragraph _
+                         ('text _ "#hashtag"))
+             ('paragraph _
+                         ('text _ "#5 bolt"))))
 
-(test-assert "parse-blocks, atx headings not a heading when # is escaped"
-             (match (call-with-input-string "\\## foo" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "\\## foo")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings not a heading when # is escaped"
+  "\\## foo"
+  ('document _
+             ('paragraph _
+                         ('text _ "\\## foo"))))
 
-(test-assert "parse-blocks, atx headings leading and trailing blanks are ignored"
-             (match (call-with-input-string "#                  foo                  " parse-blocks)
-               (('document doc-data
-                           ('heading heading-data
-                                       ('text text-data "foo")))
-                (eq? (heading-level heading-data) 1))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings leading and trailing blanks are ignored"
+  "#                  foo                  "
+  ('document _ 
+             ('heading heading-data
+                       ('text _ "foo")))
+  (heading-level heading-data) 1)
 
-(test-assert "parse-blocks, atx headings closing # characters are optional"
-             (match (call-with-input-string "## foo ##\n  ###   bar    ###" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data1
-                                     ('text text-data1 "bar"))
-                           ('heading heading-data2
-                                     ('text text-data2 "foo")))
-                (and (eq? (heading-level heading-data1) 3)
-                     (eq? (heading-level heading-data2) 2)))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings one to three spaces indentation are allowed"
+  " ### foo
+  ## foo
+   # foo"
+  ('document _
+             ('heading heading-data3
+                       ('text _ "foo"))
+             ('heading heading-data2
+                       ('text _ "foo"))
+             ('heading heading-data1
+                       ('text _ "foo")))
+  (heading-level heading-data3) 1 
+  (heading-level heading-data2) 2
+  (heading-level heading-data1) 3)
 
-(test-assert "parse-blocks, atx headings spaces are allowed after closing sequence"
-             (match (call-with-input-string "### foo ###     " parse-blocks)
-               (('document doc-data
-                           ('heading heading-data
-                                     ('text text-data "foo")))
-                (eq? (heading-level heading-data) 3))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx heading four spaces are too much"
+  "    # foo"
+  ('document _
+             ('code-block _ "# foo")))
 
-(test-assert "parse-blocks, atx headings nonspace character after closing sequence"
-             (match (call-with-input-string "### foo ### b" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data
-                                     ('text text-data "foo ### b")))
-                (eq? (heading-level heading-data) 3))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx heading four spaces are too much"
+  "foo
+    # bar"
+  ('document _
+             ('paragraph _ ('text _ "foo\n# bar"))))
 
-(test-assert "parse-blocks, atx headings closing sequence must be preceded by a space"
-             (match (call-with-input-string "# foo#" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data
-                                     ('text text-data "foo#")))
-                (eq? (heading-level heading-data) 1))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings closing # characters are optional"
+  "## foo ##
+  ###   bar    ###"
+  ('document _ 
+             ('heading heading-data1
+                       ('text _ "bar"))
+             ('heading heading-data2
+                       ('text _ "foo")))
+  (heading-level heading-data1) 3
+  (heading-level heading-data2) 2)
 
-(test-assert "parse-blocks, atx headings can be empty"
-             (match (call-with-input-string "## \n#\n### ###" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data1
-                                     ('text text-data1 ""))
-                           ('heading heading-data2
-                                     ('text text-data2 ""))
-                           ('heading heading-data3
-                                     ('text text-data3 "")))
-                (and (eq? (heading-level heading-data1) 3)
-                     (eq? (heading-level heading-data2) 1)
-                     (eq? (heading-level heading-data3) 2)))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, atx headings closing sequence does not need be same length"
+  "# foo ##################################
+##### bar ##"
+  ('document _
+             ('heading heading-data1
+                       ('text _ "bar"))
+             ('heading heading-data2
+                       ('text _ "foo")))
+  (heading-level heading-data1) 5 
+  (heading-level heading-data2) 1)
+
+(block-expect "parse-blocks, atx headings spaces are allowed after closing sequence"
+  "### foo ###     "
+  ('document _
+             ('heading heading-data
+                         ('text _ "foo")))
+  (heading-level heading-data) 3)
+
+(block-expect "parse-blocks, atx headings nonspace character after closing sequence"
+  "### foo ### b"
+  ('document _
+             ('heading heading-data
+                       ('text _ "foo ### b")))
+  (heading-level heading-data) 3)
+
+(block-expect "parse-blocks, atx headings closing sequence must be preceded by a space"
+  "# foo#"
+  ('document _
+             ('heading heading-data
+                       ('text _ "foo#")))
+  (heading-level heading-data) 1)
+
+(block-expect "parse-blocks, atx headings need not be separated from surrounding content
+by blank lines"
+  "****
+## foo
+****"
+  ('document _
+             ('thematic-break _)
+             ('heading heading-data
+                       ('text _ "foo"))
+             ('thematic-break _))
+  (heading-level heading-data) 2)
+
+(block-expect "parse-blocks, atx headings can interrupt paragraphs"
+  "Foo bar
+# baz
+Bar foo"
+  ('document _
+             ('paragraph _
+                         ('text _ "Bar foo"))
+             ('heading heading-data
+                       ('text _ "baz"))
+             ('paragraph _
+                         ('text _ "Foo bar")))
+  (heading-level heading-data) 1)
+
+(block-expect "parse-blocks, atx headings can be empty"
+  "## \n#\n### ###"
+  ('document _
+             ('heading heading-data1
+                       ('text _ ""))
+             ('heading heading-data2
+                       ('text _ ""))
+             ('heading heading-data3
+                       ('text _ "")))
+  (heading-level heading-data1) 3
+  (heading-level heading-data2) 1
+  (heading-level heading-data3) 2)
 
 
 (test-end)

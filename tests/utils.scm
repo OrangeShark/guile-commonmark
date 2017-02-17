@@ -41,8 +41,8 @@
              (format #t "*** Expected: ~s\n" expect-exp)
              #f))))
     ((_ exp expect-exp rest ...)
-     (let ((exp* exp)
-           (result (equal? exp* expect-exp)))
+     (let* ((exp* exp)
+            (result (equal? exp* expect-exp)))
        (if result
            (test-asserts rest ...)
            (begin
