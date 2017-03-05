@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,254 +15,200 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks block-quotes)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (tests utils))
 
 (test-begin "blocks block-quotes")
 
-(test-assert "parse-blocks, block quote simple"
-             (match (call-with-input-string "> # Foo\n> bar\n> baz" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data1 "bar\nbaz"))
-                                         ('heading heading-data
-                                                   ('text text-data2 "Foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote simple"
+  "> # Foo
+> bar
+> baz"
+  ('document _
+             ('block-quote _
+                           ('paragraph _ ('text _ "bar\nbaz"))
+                           ('heading _ ('text _ "Foo")))))
 
-(test-assert "parse-blocks, block quote spaces can be omitted"
-             (match (call-with-input-string "># Foo\n>bar\n>baz" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data1 "bar\nbaz"))
-                                         ('heading heading-data
-                                                   ('text text-data2 "Foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote spaces can be omitted"
+  "># Foo
+>bar
+> baz"
+  ('document _
+             ('block-quote _
+                           ('paragraph _ ('text _ "bar\nbaz"))
+                           ('heading _ ('text _ "Foo")))))
 
-(test-assert "parse-blocks, block quote can be indented 1-3 spaces"
-             (match (call-with-input-string "   > # Foo\n   > bar\n > baz" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data1 "bar\nbaz"))
-                                         ('heading heading-data
-                                                   ('text text-data2 "Foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote can be indented 1-3 spaces"
+  "   > # Foo
+   > bar
+ > baz"
+   ('document _
+             ('block-quote _
+                           ('paragraph _ ('text _ "bar\nbaz"))
+                           ('heading _ ('text _ "Foo")))))
 
-(test-assert "parse-blocks, block quote paragraph laziness"
-             (match (call-with-input-string
-                     (string-append "> # Foo\n"
-                                    "> bar\n"
-                                    "baz")
-                     parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data1 "bar\nbaz"))
-                                         ('heading heading-data
-                                                   ('text text-data2 "Foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote 4 spaces is a code block"
+  "    > # Foo
+    > bar
+    > baz"
+  ('document _
+             ('code-block _ "> # Foo\n> bar\n> baz")))
 
-(test-assert "parse-blocks, block quote can contain lazy and non-lazy continuation lines"
-             (match (call-with-input-string
-                     (string-append "> bar\n"
-                                    "baz\n"
-                                    "> foo")
-                     parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data "bar\nbaz\nfoo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote paragraph laziness"
+  "> # Foo
+> bar
+baz"
+  ('document
+   _ ('block-quote _
+                   ('paragraph _ ('text _ "bar\nbaz"))
+                   ('heading _ ('text _ "Foo")))))
 
-(test-assert "parse-blocks, block quote laziness only applies if they would be a paragraph"
-             (match (call-with-input-string "> foo\n---" parse-blocks)
-               (('document doc-data
-                           ('thematic-break break-data)
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data "foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote can contain some lazy and some
+non-lazy continuation lines"
+  "> bar
+baz
+> foo"
+  ('document
+   _ ('block-quote
+      _ ('paragraph
+         _ ('text _ "bar\nbaz\nfoo")))))
 
-(test-assert "parse-blocks, block quote lists are similiar"
-             (match (call-with-input-string "> - foo\n- bar" parse-blocks)
-               (('document doc-data
-                           ('list list-data1
-                                  ('item item-data1
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bar"))))
-                           ('block-quote quote-data
-                                         ('list list-data2
-                                                ('item item-data2
-                                                       ('paragraph para-data2
-                                                              ('text text-data2 "foo"))))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote laziness only applies if they would be a paragraph"
+  "> foo
+---"
+  ('document _
+             ('thematic-break _)
+             ('block-quote _
+                           ('paragraph _ ('text _ "foo")))))
 
-(test-assert "parse-blocks, block quote code blocks are similiar"
-             (match (call-with-input-string ">     foo\n    bar" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data1 "bar")
-                           ('block-quote quote-data
-                                         ('code-block code-data2 "foo")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote lists are similar"
+  "> - foo
+- bar"
+  ('document _
+             ('list
+              _ ('item _ ('paragraph _ ('text _ "bar"))))
+             ('block-quote
+              _ ('list
+                 _ ('item
+                    _ ('paragraph _ ('text _ "foo")))))))
 
-(test-assert "parse-blocks, block quote fenced code are similiar"
-             (match (call-with-input-string "> ```\nbar\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data1)
-                           ('paragraph para-data
-                                       ('text text-data "bar"))
-                           ('block-quote quote-data
-                                         ('fenced-code code-data2)))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote code blocks are similar"
+  ">     foo
+    bar"
+  ('document _
+             ('code-block _ "bar")
+             ('block-quote _ ('code-block _ "foo"))))
 
-(test-assert "parse-blocks, block quote code blocks can't interrupt a paragraph continuation lines"
-             (match (call-with-input-string "> foo\n    - bar" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data "foo\n- bar"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote fenced code are similar"
+  "> ```
+foo
+```"
+  ('document _
+             ('fenced-code _)
+             ('paragraph _ ('text _ "foo"))
+             ('block-quote _ ('fenced-code _))))
 
-(test-assert "parse-blocks, block quote can be empty"
-             (match (call-with-input-string ">" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote the following is a lazy continuation line"
+  "> foo
+    - bar"
+  ('document
+   _ ('block-quote
+      _ ('paragraph _ ('text _ "foo\n- bar")))))
 
-(test-assert "parse-blocks, block quote can be empty with spaces"
-             (match (call-with-input-string ">\n>  \n> " parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote can be empty"
+  ">"
+  ('document _ ('block-quote _)))
 
-(test-assert "parse-blocks, block quote can have initial or final blank lines"
-             (match (call-with-input-string ">\n> foo\n>  " parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data
-                                                     ('text text-data "foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote can be empty with spaces"
+  ">
+>  
+> "
+  ('document _ ('block-quote _)))
 
-(test-assert "parse-blocks, block quote blank lines separates block quote"
-             (match (call-with-input-string "> foo\n\n> bar" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data1
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bar")))
-                           ('block-quote quote-data2
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote can have initial or final blank lines"
+  ">
+> foo
+>  "
+  ('document
+   _ ('block-quote
+      _ ('paragraph _ ('text _ "foo")))))
 
-(test-assert "parse-blocks, block quote blank lines in a block quote separates paragraph"
-             (match (call-with-input-string "> foo\n>\n> bar" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bar"))
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "foo"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote a blank line always separates block quotes"
+  "> foo
 
-(test-assert "parse-blocks, block quote can interrupt paragraphs"
-             (match (call-with-input-string "foo\n> bar" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bar")))
-                           ('paragraph para-data2
-                                       ('text text-data2 "foo")))
-                #t)
-               (x (pk 'fail x #f))))
+> bar"
+  ('document _
+             ('block-quote _ ('paragraph _ ('text _ "bar")))
+             ('block-quote _ ('paragraph _ ('text _ "foo")))))
 
-(test-assert "parse-blocks, block quote blank lines are not needed before or after"
-             (match (call-with-input-string "> aaa\n***\n> bbb" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data1
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bbb")))
-                           ('thematic-break break-data)
-                           ('block-quote quote-data2
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "aaa"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote blank lines in a block quote separates paragraph"
+  "> foo
+>
+> bar"
+  ('document
+   _ ('block-quote _
+                   ('paragraph _ ('text _ "bar"))
+                   ('paragraph _ ('text _ "foo")))))
 
-(test-assert "parse-blocks, block quote blank line needed to break laziness"
-             (match (call-with-input-string "> bar\n\nbaz" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data1
-                                       ('text text-data1 "baz"))
-                           ('block-quote quote-data
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "bar"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-block, block quote can interrupt paragraphs"
+  "foo
+> bar"
+  ('document _
+             ('block-quote _ ('paragraph _ ('text _ "bar")))
+             ('paragraph _ ('text _ "foo"))))
 
-(test-assert "parse-blocks, block quote blank line needed to break laziness in block quotes as well"
-             (match (call-with-input-string "> bar\n>\nbaz" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data1
-                                       ('text text-data1 "baz"))
-                           ('block-quote quote-data
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "bar"))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote blank lines are not needed before or after"
+  "> aaa
+***
+> bbb"
+  ('document _
+             ('block-quote _ ('paragraph _ ('text _ "bbb")))
+             ('thematic-break _)
+             ('block-quote _ ('paragraph _ ('text _ "aaa")))))
 
-(test-assert "parse-blocks, block quote laziness rule allowed in nested block quotes"
-             (match (call-with-input-string "> > > foo\nbar" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data1
-                                         ('block-quote quote-data2
-                                                       ('block-quote quote-data3
-                                                                     ('paragraph para-data
-                                                                                 ('text text-data "foo\nbar"))))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote blank line needed to break laziness"
+  "> bar
 
-(test-assert "parse-blocks, block quote laziness rule allowed in nested block quotes of multiple levels"
-             (match (call-with-input-string ">>> foo\n> bar\n>>baz" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data1
-                                         ('block-quote quote-data2
-                                                       ('block-quote quote-data3
-                                                                     ('paragraph para-data
-                                                                                 ('text text-data "foo\nbar\nbaz"))))))
-                #t)
-               (x (pk 'fail x #f))))
+baz"
+  ('document _
+             ('paragraph _ ('text _ "baz"))
+             ('block-quote _ ('paragraph _ ('text _ "bar")))))
 
-(test-assert "parse-blocks, block quote code blocks need five spaces"
-             (match (call-with-input-string ">     code\n\n>    not code" parse-blocks)
-               (('document doc-data
-                           ('block-quote quote-data1
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "not code")))
-                           ('block-quote quote-data2
-                                         ('code-block code-data "code")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, block quote blank line needed to break laziness in block quotes as well"
+  "> bar
+>
+baz"
+  ('document _
+             ('paragraph _ ('text _ "baz"))
+             ('block-quote _ ('paragraph _ ('text _ "bar")))))
+
+(block-expect "parse-blocks, block quote laziness rule allowed in nested block quotes"
+  "> > > foo
+bar"
+  ('document
+   _ ('block-quote
+      _ ('block-quote
+         _ ('block-quote
+            _ ('paragraph _ ('text _ "foo\nbar")))))))
+
+(block-expect "parse-blocks, block quote laziness rule allowed in nested block quotes of multiple
+levels"
+  ">>> foo
+> bar
+>>baz"
+  ('document
+   _ ('block-quote
+      _ ('block-quote
+         _ ('block-quote
+            _ ('paragraph _ ('text _ "foo\nbar\nbaz")))))))
+
+(block-expect "parse-blocks, block quote code blocks need five spaces"
+  ">     code
+
+>    not code"
+  ('document _
+             ('block-quote _ ('paragraph _ ('text _ "not code")))
+             ('block-quote _ ('code-block _ "code"))))
 
 (test-end)
 
