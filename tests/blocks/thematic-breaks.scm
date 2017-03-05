@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,49 +15,132 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks thematic-breaks)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (tests utils))
 
 (test-begin "blocks thematic-breaks")
 
-(test-equal "parse-blocks, thematic breaks with *"
-            (call-with-input-string "***\n **  * ** * ** * **" parse-blocks)
-            '(document ((closed . #f))
-                       (thematic-break ((closed . #t)))
-                       (thematic-break ((closed . #t)))))
+(block-expect "parse-blocks, basic thematic breaks"
+  "***
+---
+___"
+  ('document _
+             ('thematic-break _)
+             ('thematic-break _)
+             ('thematic-break _)))
 
-(test-equal "parse-blocks, thematic breaks with -"
-            (call-with-input-string "---\n - - -" parse-blocks)
-            '(document ((closed . #f))
-                       (thematic-break ((closed . #t)))
-                       (thematic-break ((closed . #t)))))
+(block-expect "parse-blocks, not enough characters"
+  "--
+**
+__"
+  ('document _
+             ('paragraph _
+                         ('text _ "--\n**\n__"))))
 
-(test-equal "parse-blocks, thematic breaks with _"
-            (call-with-input-string "___\n   _______________________  " parse-blocks)
-            '(document ((closed . #f))
-                       (thematic-break ((closed . #t)))
-                       (thematic-break ((closed . #t)))))
+(block-expect "parse-blocks, thematic break one to three spaces indent are allowed"
+  " ***
+  ***
+   ***"
+  ('document _
+             ('thematic-break _)
+             ('thematic-break _)
+             ('thematic-break _)))
 
-(test-equal "parse-blocks, thematic breaks must not have other characters"
-            (call-with-input-string "---a---" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "---a---"))))
+(block-expect "parse-blocks, thematic break four spaces is too many"
+  "    ***"
+  ('document _
+             ('code-block _ "***")))
 
-(test-assert "parse-blocks, thematic breaks can interupt a paragraph"
-             (match (call-with-input-string "Foo\n***\nbar" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data1
-                                      ('text text-data1 "bar"))
-                           ('thematic-break (('closed . #t)))
-                           ('paragraph para-data2
-                                      ('text text-data2 "Foo")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, thematic break four spaces is too many"
+  "Foo
+    ***"
+  ('document _
+             ('paragraph _
+                         ('text _ "Foo\n***"))))
+
+(block-expect "parse-blocks, thematic break more than three characters may be used"
+  "_____________________________________"
+  ('document _
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, thematic break spaces are allowed between the characters"
+  " - - -"
+  ('document _
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, thematic break spaces are allowed between the characters"
+  " **  * ** * ** * **"
+  ('document _
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, thematic break spaces are allowed between the characters"
+  "-     -      -      -"
+  ('document _
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, thematic break spaces are allowed at the end"
+  "- - - -    "
+  ('document _
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, thematic break no other characters may occur in the line"
+  "_ _ _ _ a
+
+a------
+
+---a---"
+  ('document _
+             ('paragraph _ ('text _ "---a---"))
+             ('paragraph _ ('text _ "a------"))
+             ('paragraph _ ('text _ "_ _ _ _ a"))))
+
+(block-expect "parse-blocks, thematic break all characters need to be the same"
+  " *-*"
+  ('document _
+             ('paragraph _ ('text _ "*-*"))))
+
+(block-expect "parse-blocks, thematic break do not need blank lines before or after"
+  "- foo
+***
+- bar"
+  ('document _
+             ('list _ ('item _ ('paragraph _ ('text _ "bar"))))
+             ('thematic-break _)
+             ('list _ ('item _ ('paragraph _ ('text _ "foo"))))))
+
+(block-expect "parse-blocks, thematic break can interrupt a paragraph"
+  "Foo
+***
+bar"
+  ('document _
+             ('paragraph _ ('text _ "bar"))
+             ('thematic-break _)
+             ('paragraph _ ('text _ "Foo"))))
+
+(block-expect "parse-blocks, thematic break line of dashes interpreted as setext heading"
+  "Foo
+---
+bar"
+  ('document _
+             ('paragraph _ ('text _ "bar"))
+             ('heading _ ('text _ "Foo"))))
+
+(block-expect "parse-blocks, thematic break takes precedence with lists"
+  "* Foo
+* * *
+* Bar"
+  ('document _
+             ('list _ ('item _ ('paragraph _ ('text _ "Bar"))))
+             ('thematic-break _)
+             ('list _ ('item _ ('paragraph _ ('text _ "Foo"))))))
+
+(block-expect "parse-blocks, thematic break use a different symbol in a list"
+  "- Foo
+- * * *"
+  ('document _
+             ('list _
+                    ('item _ ('thematic-break _))
+                    ('item _ ('paragraph _ ('text _ "Foo"))))))
 
 (test-end)
 
