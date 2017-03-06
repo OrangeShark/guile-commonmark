@@ -498,12 +498,6 @@
                 (cons (make-text-node (match:substring normal-text 0)) nodes)
                 delim-stack ref-proc)))
 
-(define (parse-normal-text text nodes delim-stack ref-proc)
-  (let ((normal-text (normal-text? text)))
-    (parse-char (text-move text (match:end normal-text 0))
-                (cons (make-text-node (match:substring normal-text 0)) nodes)
-                delim-stack ref-proc)))
-
 (define (pop-remaining-delim nodes delim-stack)
   (if (delim-stack-empty? delim-stack)
       (if (and (not (null? nodes)) (text-node? (car nodes))) (remove-trailing-space nodes) nodes)
