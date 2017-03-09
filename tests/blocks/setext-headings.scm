@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,81 +15,189 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks setext-headings)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (tests utils))
 
 (test-begin "blocks setext-headings")
 
-(define (heading-level heading-data)
-  (assq-ref heading-data 'level))
 
-(test-assert "parse-blocks, setext headings"
-             (match (call-with-input-string "Foo\n-------------------------\n\nBar\n=" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data1
-                                     ('text text-data1 "Bar"))
-                           ('heading heading-data2
-                                     ('text text-data2 "Foo")))
-                (and (eq? (heading-level heading-data1) 1)
-                     (eq? (heading-level heading-data2) 2)))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, simple setext headings"
+  "Foo *bar*
+=========
 
-(test-assert "parse-blocks, setext headings up to three space indents"
-             (match (call-with-input-string
-                     "   Foo\n---\n\n  Foo\n-----\n\n  Foo\n  ===" parse-blocks)
-               (('document doc-data
-                           ('heading heading-data1
-                                     ('text text-data1 "Foo"))
-                           ('heading heading-data2
-                                     ('text text-data2 "Foo"))
-                           ('heading heading-data3
-                                     ('text text-data3 "Foo")))
-                (and (eq? (heading-level heading-data1) 1)
-                     (eq? (heading-level heading-data2) 2)
-                     (eq? (heading-level heading-data3) 2)))
-               (x (pk 'fail x #f))))
+Foo *bar*
+---------"
+  ('document _
+             ('heading heading-data1 ('text _ "Foo *bar*"))
+             ('heading heading-data2 ('text _ "Foo *bar*")))
+  (heading-level heading-data1) 2
+  (heading-level heading-data2) 1)
 
-(test-assert "parse-blocks, setext headings four space indents too much"
-             (match (call-with-input-string
-                     "    Foo\n    ---\n\n    Foo\n---" parse-blocks)
-               (('document doc-data
-                           ('thematic-break break-data)
-                           ('code-block code-data "Foo\n---\n\nFoo"))
-                #t)
-               (x (pk 'fail x #f))))
+(test-expect-fail 1) ;;TODO implement multiline headings
+(block-expect "parse-blocks, setext headings may span more than one line"
+  "Foo *bar
+baz*
+===="
+  ('document _
+             ('heading heading-data ('text _ "Foo *bar\nbaz*")))
+  (heading-level heading-data) 1)
 
+(block-expect "parse-blocks, setext heading underline can be any length"
+  "Foo
+-------------------------
 
-(test-assert "parse-blocks, setext headings four space indent underline too much"
-             (match (call-with-input-string "Foo\n    ---" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "Foo\n---")))
-                #t)
-               (x (pk 'fail x #f))))
+Foo
+="
+  ('document _
+             ('heading heading-data1 ('text _ "Foo"))
+             ('heading heading-data2 ('text _ "Foo")))
+  (heading-level heading-data1) 1
+  (heading-level heading-data2) 2)
 
-(test-assert "parse-blocks, setext headings underline cannot contain interal spaces"
-             (match (call-with-input-string "Foo\n= =\n\nFoo\n--- -" parse-blocks)
-               (('document doc-data
-                           ('thematic-break break-data)
-                           ('paragraph para-data1
-                                       ('text text-data1 "Foo"))
-                           ('paragraph para-data2
-                                       ('text text-data2 "Foo\n= =")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, setext heading content can be indented up to three spaces"
+  "   Foo
+---
 
-(test-assert "parse-blocks, setext heading cannot interrupt a paragraph"
-             (match (call-with-input-string "Foo\nBar\n---" parse-blocks)
-               (('document doc-data
-                           ('thematic-break break-data)
-                           ('paragraph para-data
-                                       ('text text-data "Foo\nBar")))
-                #t)
-               (x (pk 'fail x #f))))
+  Foo
+-----
+
+  Foo
+  ==="
+  ('document _
+             ('heading heading-data1 ('text _ "Foo"))
+             ('heading heading-data2 ('text _ "Foo"))
+             ('heading heading-data3 ('text _ "Foo")))
+  (heading-level heading-data1) 1
+  (heading-level heading-data2) 2
+  (heading-level heading-data3) 2)
+
+(block-expect "parse-blocks, setext heading four spaces indent is too much"
+  "    Foo
+    ---
+
+    Foo
+---"
+  ('document _
+             ('thematic-break _)
+             ('code-block _ "Foo\n---\n\nFoo")))
+
+(block-expect "parse-blocks, setext heading underline can be indented up to three spaces
+and may have trailing spaces"
+  "Foo
+   ----      "
+  ('document _
+             ('heading heading-data ('text _ "Foo")))
+  (heading-level heading-data) 2)
+
+(block-expect "parse-blocks, setext heading underline four spaces it too much"
+  "Foo
+    ---"
+  ('document _
+             ('paragraph _ ('text _ "Foo\n---"))))
+
+(block-expect "parse-blocks, setext heading underline cannot contain internal spaces"
+  "Foo
+= =
+
+Foo
+--- -"
+  ('document _
+             ('thematic-break _)
+             ('paragraph _ ('text _ "Foo"))
+             ('paragraph _ ('text _ "Foo\n= ="))))
+
+(block-expect "parse-blocks, setext heading underline cannot be a lazy continuation line"
+  "> Foo
+---"
+  ('document _
+             ('thematic-break _)
+             ('block-quote
+              _ ('paragraph _ ('text _ "Foo")))))
+
+(block-expect "parse-blocks, setext heading underline cannot be a lazy continuation line"
+  "> foo
+bar
+==="
+  ('document
+   _ ('block-quote _ ('paragraph _ ('text _ "foo\nbar\n===")))))
+
+(block-expect "parse-blocks, setext heading underline cannot be a lazy continuation line"
+  "- Foo
+---"
+  ('document _
+             ('thematic-break _)
+             ('list _ ('item _ ('paragraph _ ('text _ "Foo"))))))
+
+(test-expect-fail 1)
+(block-expect "parse-blocks, setext heading a blank line is needed between a paragraph
+and a setext heading"
+  "Foo
+Bar
+---"
+  ('document _
+             ('heading heading-data ('text _ "Foo\nBar")))
+  (heading-level heading-data) 2)
+
+(block-expect "parse-blocks, setext heading a blank line is not required before or after
+setext headings"
+  "---
+Foo
+---
+Bar
+---
+Baz"
+  ('document _
+             ('paragraph _ ('text _ "Baz"))
+             ('heading heading-data1 ('text _ "Bar"))
+             ('heading heading-data2 ('text _ "Foo"))
+             ('thematic-break _))
+  (heading-level heading-data1) 2
+  (heading-level heading-data2) 2)
+
+(block-expect "parse-blocks, setext headings cannot be empty"
+  "
+===="
+  ('document _
+             ('paragraph _ ('text _ "===="))))
+
+(block-expect "parse-blocks, setext heading text lines must not be interpretable as block
+constructs other than paragraphs"
+  "---
+---"
+  ('document _
+             ('thematic-break _)
+             ('thematic-break _)))
+
+(block-expect "parse-blocks, setext heading text lines must not be interpretable as block
+constructs other than paragraphs"
+  "- foo
+-----"
+  ('document _
+             ('thematic-break _)
+             ('list _ ('item _ ('paragraph _ ('text _ "foo"))))))
+
+(block-expect "parse-blocks, setext heading text lines must not be interpretable as block
+constructs other than paragraphs"
+  "    foo
+---"
+  ('document _
+             ('thematic-break _)
+             ('code-block _ "foo")))
+
+(block-expect "parse-blocks, setext heading text lines must not be interpretable as block
+constructs other than paragraphs"
+  "> foo
+-----"
+  ('document _
+             ('thematic-break _)
+             ('block-quote _ ('paragraph _ ('text _ "foo")))))
+
+(block-expect "parse-blocks, setext heading use a backslash escape to allow >"
+  "\\> foo
+------"
+  ('document _
+             ('heading heading-data ('text _ "\\> foo")))
+  (heading-level heading-data) 2)
 
 (test-end)
 
