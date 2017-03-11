@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,98 +15,99 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks code-blocks)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (tests utils))
 
 (test-begin "blocks code-blocks")
 
-(test-assert "parse-blocks, indented code block"
-             (match (call-with-input-string "    a simple\n      indented code block" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "a simple\n  indented code block"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block"
+  "    a simple
+      indented code block"
+  ('document _ ('code-block _ "a simple\n  indented code block")))
 
-(test-assert "parse-blocks, indented code block list takes precedence in list item"
-             (match (call-with-input-string "1.  foo\n\n    bar" parse-blocks)
-               (('document doc-data
-                           ('list list-data
-                                  ('item item-data 
-                                         ('paragraph para-data1
-                                                     ('text text-data1 "bar"))
-                                         ('paragraph para-data2
-                                                     ('text text-data2 "foo")))))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block, list takes precedence"
+  "  - foo
 
-(test-assert "parse-blocks, indented code block chunks separated by blank lines"
-             (match (call-with-input-string "    chunk1\n\n    chunk2\n  \n \n \n    chunk3" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "chunk1\n\nchunk2\n\n\n\nchunk3"))
-                #t)
-               (x (pk 'fail x #f))))
+    bar"
+  ('document
+   _ ('list
+      _ ('item _
+               ('paragraph _ ('text _ "bar"))
+               ('paragraph _ ('text _ "foo"))))))
 
-(test-assert "parse-blocks, indented code block includes spaces"
-             (match (call-with-input-string "    chunk1\n      \n      chunk2" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "chunk1\n  \n  chunk2"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block, list takes precedence"
+  "1.  foo
+    - bar"
+  ('document
+   _ ('list _
+            ('item _
+                   ('list _ ('item _ ('paragraph _ ('text _ "bar"))))
+                   ('paragraph _ ('text _ "foo"))))))
 
-(test-assert "parse-blocks, indented code block fewer than four leading spaces end block"
-             (match (call-with-input-string "    foo\nbar" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "bar"))
-                           ('code-block code-data
-                                        "foo"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block chunks separated by blank lines"
+  "    chunk1
 
-(test-assert "parse-blocks, indented code block and occur before or after blocks that aren't paragraphs"
-             (match (call-with-input-string
-                     "# Heading\n    foo\nHeading\n------\n    foo\n----" parse-blocks)
-               (('document doc-data
-                           ('thematic-break break-data)
-                           ('code-block code-data "foo")
-                           ('heading heading-data1
-                                     ('text text-data1 "Heading"))
-                           ('code-block code-data "foo")
-                           ('heading heading-data2
-                                     ('text text-data2 "Heading")))
-                #t)
-               (x (pk 'fail x #f))))
+    chunk2
+  
+ 
+ 
+    chunk3"
+  ('document _
+             ('code-block _ "chunk1\n\nchunk2\n\n\n\nchunk3")))
 
-(test-assert "parse-blocks, indented code block first line can have more than four spaces"
-             (match (call-with-input-string "        foo\n    bar" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "    foo\nbar"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block spaces beyond four are included even
+blank lines"
+  "    chunk1
+      
+      chunk2"
+  ('document _
+             ('code-block _ "chunk1\n  \n  chunk2")))
 
-(test-assert "parse-blocks, indented code blank lines preceding or following are not included"
-             (match (call-with-input-string "\n    \n    foo\n    \n\n" parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "foo"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block cannot interrupt a paragraph"
+  "Foo
+    bar"
+  ('document _ ('paragraph _ ('text _ "Foo\nbar"))))
 
-(test-assert "parse-blocks, indented code trailing spaces are included"
-             (match (call-with-input-string "    foo  " parse-blocks)
-               (('document doc-data
-                           ('code-block code-data
-                                        "foo  "))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, indented code block any non-blank line with fewer than four
+leading spaces ends code block immediately"
+  "    foo
+bar"
+  ('document _
+             ('paragraph _ ('text _ "bar"))
+             ('code-block _ "foo")))
+
+(block-expect "parse-blocks, indented code block can occur immediately before and after
+other kinds of blocks"
+  "# Heading
+    foo
+Heading
+------
+    foo
+----"
+  ('document _
+             ('thematic-break _)
+             ('code-block _ "foo")
+             ('heading _ ('text _ "Heading"))
+             ('code-block _ "foo")
+             ('heading _ ('text _ "Heading"))))
+
+(block-expect "parse-blocks, indented code block, first line can be indented more than
+four spaces"
+  "        foo
+    bar"
+  ('document _ ('code-block _ "    foo\nbar")))
+
+(block-expect "parse-blocks, indented code block, blank lines preceding
+or following an indented code block are not included"
+  "
+    
+    foo
+    "
+  ('document _ ('code-block _ "foo")))
+
+(block-expect "parse-blocks, indented code block trailing spaces are included"
+  "    foo  "
+  ('document _ ('code-block _ "foo  ")))
 
 (test-end)
 
