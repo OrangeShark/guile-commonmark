@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,165 +15,227 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks fenced-code)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (srfi srfi-1)
+             (srfi srfi-26)
+             (ice-9 match)
+             (commonmark blocks)
+             (tests utils))
 
 (test-begin "blocks fenced-code")
 
-(test-assert "parse-blocks, fenced code simple"
-             (match (call-with-input-string "```\n<\n >\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "<\n >"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code simple"
+  "```
+<
+ >
+```"
+  ('document _
+             ('fenced-code _ "<\n >")))
 
-(test-assert "parse-blocks, fenced code simple with tildes"
-             (match (call-with-input-string "~~~\n<\n >\n~~~" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "<\n >"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code simple with tildes"
+  "~~~
+<
+ >
+~~~"
+  ('document _
+             ('fenced-code _ "<\n >")))
 
-(test-assert "parse-blocks, fenced code must use the same character as opening fence"
-             (match (call-with-input-string "```\naaa\n~~~\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\n~~~"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code must use the same character as the opening"
+  "```
+aaa
+~~~
+```"
+  ('document _
+             ('fenced-code _ "aaa\n~~~")))
 
-(test-assert "parse-blocks, fenced code must use the same character as opening fence tildes"
-             (match (call-with-input-string "````\naaa\n```\n````" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\n```"))
-                #t)
-               (x (pk 'fail x #f))))
 
-(test-assert "parse-blocks, fenced code unclosed until end of the document"
-             (match (call-with-input-string "```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code must use the same character as the opening"
+  "~~~
+aaa
+```
+~~~"
+  ('document _
+             ('fenced-code _ "aaa\n```")))
 
-(test-assert "parse-blocks, fenced code closes at end of block quote"
-             (match (call-with-input-string "> ```\n> aaa\n\nbbb" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "bbb"))
-                           ('block-quote quote-data
-                                         ('fenced-code code-data
-                                                       "aaa")))
-                #t)
-               (x (pk 'fail x #f))))
+(test-expect-fail 1) ;; TODO match longer closing fences
+(block-expect "parse-blocks, fenced code closing fence must be at least as long as
+the opening fence"
+  "````
+aaa
+```
+``````"
+  ('document _
+             ('frenced-code _ "aaa\n```")))
 
-(test-assert "parse-blocks, fenced code can have all empty lines"
-             (match (call-with-input-string "```\n\n  \n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "\n  "))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code closing fence must be at least as long as
+the opening fence"
+  "~~~~
+aaa
+~~~
+~~~~"
+  ('document _
+             ('fenced-code _ "aaa\n~~~")))
 
-(test-assert "parse-blocks, fenced code can be empty"
-             (match (call-with-input-string "```\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code unclosed code blocks are closed by the end of
+the document"
+  "```"
+  ('document _
+             ('fenced-code _)))
 
-(test-assert "parse-blocks, fenced code can be indented and equivalent spaces removed"
-             (match (call-with-input-string " ```\n aaa\naaa\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\naaa"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks fenced code unclosed code blocks are closed by the end of
+the document"
+  "`````
 
-(test-assert "parse-blocks, fenced code can be indented and equivalent spaces removed if present"
-             (match (call-with-input-string "  ```\naaa\n  aaa\naaa\n  ```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\naaa\naaa"))
-                #t)
-               (x (pk 'fail x #f))))
+```
+aaa"
+  ('document _
+             ('fenced-code _ "\n```\naaa")))
 
-(test-assert "parse-blocks, fenced code closing fence 4 spaces too much"
-             (match (call-with-input-string "```\naaa\n    ```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\n    ```"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code unclosed code blocks are closed by the end of
+block quote"
+  "> ```
+> aaa
 
-(test-assert "parse-blocks, fenced code spaces are not allowed in opening fence"
-             (match (call-with-input-string "``` ```\naaa" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "``` ```\naaa")))
-                #t)
-               (x (pk 'fail x #f))))
+bbb"
+  ('document _
+             ('paragraph _ ('text _ "bbb"))
+             ('block-quote _
+                           ('fenced-code _ "aaa"))))
 
-(test-assert "parse-blocks, fenced code spaces are not allowed in closing fence"
-             (match (call-with-input-string "~~~~~\naaa\n~~~ ~~" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "aaa\n~~~ ~~"))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code can have all empty lines as its content"
+  "```
 
-(test-assert "parse-blocks, fenced code can interrupt paragraphs and followed by paragraphs"
-             (match (call-with-input-string "foo\n```\nbar\n```\nbaz" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data1
-                                       ('text text-data1 "baz"))
-                           ('fenced-code code-data
-                                         "bar")
-                           ('paragraph para-data2
-                                       ('text text-data2 "foo")))
-                #t)
-               (x (pk 'fail x #f))))
+  
+```"
+  ('document _
+             ('fenced-code _ "\n  ")))
 
-(define (info-string data)
-  (assq-ref data 'info-string))
+(block-expect "parse-blocks, fenced code can be empty"
+  "```
+```"
+  ('document _
+             ('fenced-code _)))
 
-(test-assert "parse-blocks, fenced code info string"
-             (match (call-with-input-string "```scheme\n(define (foo x)\n  3)\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data
-                                         "(define (foo x)\n  3)"))
-                (equal? (info-string code-data) "scheme"))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code can be indented with equivalent opening
+indentation removed"
+  " ```
+ aaa
+aaa
+```"
+  ('document _
+             ('fenced-code _ "aaa\naaa")))
 
-(test-assert "parse-blocks, fenced code info string empty code"
-             (match (call-with-input-string "```;\n```" parse-blocks)
-               (('document doc-data
-                           ('fenced-code code-data))
-                (equal? (info-string code-data) ";"))
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code can be indented with equivalent opening
+indentation removed"
+  "  ```
+aaa
+  aaa
+aaa
+  ```"
+  ('document _
+             ('fenced-code _ "aaa\naaa\naaa")))
 
-(test-assert "parse-blocks, fenced code coding fence cannot have info strings"
-  (match (call-with-input-string "```\n``` aaa\n```" parse-blocks)
-    (('document doc-data
-                ('fenced-code code-data "``` aaa"))
-     (not (equal? (info-string code-data) "aaa")))
-    (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code can be indented with equivalent opening
+indentation removed"
+  "   ```
+   aaa
+    aaa
+  aaa
+   ```"
+  ('document _
+             ('fenced-code _ "aaa\n aaa\naaa")))
 
-(test-assert "parse-blocks, fenced code info string is escaped"
-  (match (call-with-input-string (string-append "```f&ouml;&ouml;\n"
-                                                "foo\n"
-                                                "```") parse-blocks)
-    (('document doc-data
-                ('fenced-code code-data "foo"))
-     (equal? (info-string code-data) "föö"))
-    (x (pk 'fail x #f))))
+(block-expect "parse-blocks, fenced code four spaces indentation produces code-block"
+  "    ```
+    aaa
+    ```"
+  ('document _
+             ('code-block _ "```\naaa\n```")))
+
+(block-expect "parse-blocks, fenced code closing fence may be indented by 0-3 spaces
+and does not need to match opening fence indentation"
+  "```
+aaa
+  ```"
+  ('document _
+             ('fenced-code _ "aaa")))
+
+(block-expect "parse-blocks, fenced code closing fence may be indented by 0-3 spaces
+and does not need to match opening fence indentation"
+  "   ```
+aaa
+  ```"
+  ('document _
+             ('fenced-code _ "aaa")))
+
+(block-expect "parse-blocks, fenced code not a closing fence because it is indented 4 spaces"
+  "```
+aaa
+    ```"
+  ('document _
+             ('fenced-code _ "aaa\n    ```")))
+
+(block-expect "parse-blocks, fenced code fences cannot contain internal spaces"
+  "``` ```
+aaa"
+  ('document _
+             ('paragraph _ ('text _ "``` ```\naaa"))))
+
+(block-expect "parse-blocks, fenced code fences cannot contain internal spaces"
+  "~~~~~~
+aaa
+~~~ ~~~"
+  ('document _
+             ('fenced-code _ "aaa\n~~~ ~~~")))
+
+(block-expect "parse-blocks, fenced code can interrupt paragraphs, and can be followed
+by paragraphs, without a blank line between"
+  "foo
+```
+bar
+```
+baz"
+  ('document _
+             ('paragraph _ ('text _ "baz"))
+             ('fenced-code _ "bar")
+             ('paragraph _ ('text _ "foo"))))
+
+(block-expect "parse-blocks, fenced code, other blocks can occur before and after fenced code
+blocks without a blank line"
+  "foo
+---
+~~~
+bar
+~~~
+# baz"
+  ('document _
+             ('heading _ ('text _ "baz"))
+             ('fenced-code _ "bar")
+             ('heading _ ('text _ "foo"))))
+
+(block-expect "parse-blocks, fenced code info string"
+  "```ruby
+def foo(x)
+  return 3
+end
+```"
+  ('document _
+             ('fenced-code code-data "def foo(x)\n  return 3\nend"))
+  (info-string code-data) "ruby")
+
+(block-expect "parse-blocks, fenced code info strings backtick code blocks cannot
+contain backticks"
+  "``` aa ```
+foo"
+  ('document _
+             ('paragraph _ ('text _ "``` aa ```\nfoo"))))
+
+(block-expect "parse-blocks, fenced code closing fences cannot have info strings"
+  "```
+``` aaa
+```"
+  ('document _
+             ('fenced-code _ "``` aaa")))
 
 (test-end)
 

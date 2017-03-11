@@ -21,6 +21,7 @@
   #:use-module (commonmark blocks)
   #:export (heading-level
             link-references
+            info-string
             block-expect))
 
 (define (heading-level heading-data)
@@ -28,6 +29,9 @@
 
 (define (link-references data)
   (assq-ref data 'link-references))
+
+(define (info-string data)
+  (assq-ref data 'info-string))
 
 (define-syntax test-asserts
   (syntax-rules ()
