@@ -22,6 +22,7 @@
   #:export (heading-level
             link-references
             info-string
+            link-references
             block-expect))
 
 (define (heading-level heading-data)
@@ -32,6 +33,9 @@
 
 (define (info-string data)
   (assq-ref data 'info-string))
+
+(define (link-references data)
+  (assq-ref data 'link-references))
 
 (define-syntax test-asserts
   (syntax-rules ()
