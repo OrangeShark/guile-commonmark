@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -15,70 +15,69 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (test-blocks paragraphs)
-  #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-26)
-  #:use-module (srfi srfi-64)
-  #:use-module (ice-9 match)
-  #:use-module (commonmark blocks))
+(use-modules (srfi srfi-64)
+             (tests utils))
 
 (test-begin "blocks paragraphs")
 
-(test-equal "parse-blocks, empty document"
-            (call-with-input-string "" parse-blocks)
-            '(document ((closed . #f))))
+(block-expect "parse-blocks, simple paragraph"
+  "aaa
 
-(test-equal "parse-blocks, simple paragraph"
-            (call-with-input-string "foo" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo"))))
+bbb"
+  ('document _
+             ('paragraph _ ('text _ "bbb"))
+             ('paragraph _ ('text _ "aaa"))))
 
-(test-assert "parse-blocks, paragraph leading spaces skipped"
-             (match (call-with-input-string "  aaa\n bbb" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "aaa\nbbb")))
-                #t)
-               (x (pk 'fail x #f))))
+(block-expect "parse-blocks, paragraph can contain multiple lines, but no blank lines"
+  "aaa
+bbb
 
-(test-assert "parse-blocks, paragraph lines after first may ident any ammount"
-             (match (call-with-input-string "aaa\n          bbb\n                    ccc" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "aaa\nbbb\nccc")))
-                #t)
-               (x (pk 'fail x #f))))
+ccc
+ddd"
+  ('document _
+             ('paragraph _ ('text _ "ccc\nddd"))
+             ('paragraph _ ('text _ "aaa\nbbb"))))
 
-(test-equal "parse-blocks, multiline paragraph"
-            (call-with-input-string "foo\nbar" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo\nbar"))))
+(block-expect "parse-blocks, multiple blank lines between paragraph have no effect"
+  "aaa
 
-(test-assert "parse-blocks, code block does not interrupt paragraph"
-             (match (call-with-input-string "foo\n    bar" parse-blocks)
-               (('document doc-data
-                           ('paragraph para-data
-                                       ('text text-data "foo\nbar")))
-                #t)
-               (x (pk 'fail x #f))))
 
-(test-equal "parse-blocks, multiline paragraph preserves line ending spaces"
-            (call-with-input-string "foo   \nbar" parse-blocks)
-            '(document ((closed . #f))
-                       (paragraph ((closed . #f))
-                                  (text ((closed . #t)) "foo   \nbar"))))
+bbb"
+  ('document _
+             ('paragraph _ ('text _ "bbb"))
+             ('paragraph _ ('text _ "aaa"))))
 
-(test-assert "parse-blocks, paragraph multiple blank lines have no affect"
-            (match (call-with-input-string "aaa\n\nbbb" parse-blocks)
-              (('document doc-data
-                          ('paragraph para-data1
-                                      ('text text-data1 "bbb"))
-                          ('paragraph para-data2
-                                      ('text text-data2 "aaa")))
-               #t)
-              (x (pk 'fail x #f))))
+(block-expect "parse-blocks, paragraph leading spaces are skipped"
+  "  aaa\n bbb"
+  ('document _
+             ('paragraph _ ('text _ "aaa\nbbb"))))
+
+(block-expect "parse-blocks, paragraph lines after the first may be indented any amount"
+  "aaa
+             bbb
+                                       ccc"
+  ('document _
+             ('paragraph _ ('text _ "aaa\nbbb\nccc"))))
+
+(block-expect "parse-blocks, paragraph the first line may be indented at most three spaces"
+  "   aaa
+bbb"
+  ('document _
+             ('paragraph _ ('text _ "aaa\nbbb"))))
+
+(block-expect "parse-blocks, paragraph the first line may be indented at most three spaces"
+  "    aaa
+bbb"
+  ('document _
+             ('paragraph _ ('text _ "bbb"))
+             ('code-block _ "aaa")))
+
+(test-expect-fail 1) ;; Should trim end?
+(block-expect "parse-blocks, paragraph final spaces are stripeed before inline parsing"
+  "aaa     
+bbb     "
+  ('document _
+             ('paragraph _ ('text _ "aaa     \nbbb"))))
 
 (test-end)
 
