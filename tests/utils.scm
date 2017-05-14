@@ -23,6 +23,7 @@
             link-references
             info-string
             link-references
+            list-start
             block-expect))
 
 (define (heading-level heading-data)
@@ -36,6 +37,9 @@
 
 (define (link-references data)
   (assq-ref data 'link-references))
+
+(define (list-start data)
+  (assq-ref data 'start))
 
 (define-syntax test-asserts
   (syntax-rules ()
