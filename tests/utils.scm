@@ -24,6 +24,7 @@
             info-string
             link-references
             list-start
+            list-tight?
             block-expect))
 
 (define (heading-level heading-data)
@@ -40,6 +41,9 @@
 
 (define (list-start data)
   (assq-ref data 'start))
+
+(define (list-tight? data)
+  (assq-ref data 'tight))
 
 (define-syntax test-asserts
   (syntax-rules ()
