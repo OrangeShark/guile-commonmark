@@ -57,7 +57,6 @@ aaa
   ('document _
              ('fenced-code _ "aaa\n```")))
 
-(test-expect-fail 1) ;; TODO match longer closing fences
 (block-expect "parse-blocks, fenced code closing fence must be at least as long as
 the opening fence"
   "````
@@ -65,7 +64,7 @@ aaa
 ```
 ``````"
   ('document _
-             ('frenced-code _ "aaa\n```")))
+             ('fenced-code _ "aaa\n```")))
 
 (block-expect "parse-blocks, fenced code closing fence must be at least as long as
 the opening fence"

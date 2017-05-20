@@ -1,4 +1,4 @@
-;; Copyright (C) 2016 Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -202,7 +202,7 @@
   (regexp-exec re-fenced-code (parser-str parser) (parser-pos parser)))
 
 (define (fenced-code-end parser fence)
-  (string-match (string-append "^" fence "$") (parser-str parser) (parser-pos parser)))
+  (string-match (string-append "^" fence "+$") (parser-str parser) (parser-pos parser)))
 
 (define (bullet-list-marker parser)
   (regexp-exec re-bullet-list-marker (parser-str parser) (parser-pos parser)))
