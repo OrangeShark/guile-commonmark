@@ -72,8 +72,7 @@ bbb"
              ('paragraph _ ('text _ "bbb"))
              ('code-block _ "aaa")))
 
-(test-expect-fail 1) ;; Should trim end?
-(block-expect "parse-blocks, paragraph final spaces are stripeed before inline parsing"
+(block-expect "parse-blocks, paragraph final spaces are stripped before inline parsing"
   "aaa     
 bbb     "
   ('document _

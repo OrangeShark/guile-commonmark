@@ -293,7 +293,7 @@
                          links))))
           (else (col (if (= (string-length text) 0)
                          #f
-                         (make-paragraph-node text)) links)))))
+                         (make-paragraph-node (string-trim-right text))) links)))))
 
 (define (remove-empty-lines node col)
   (col (make-node (node-type node) (node-data node)
