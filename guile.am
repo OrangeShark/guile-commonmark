@@ -1,3 +1,6 @@
+moddir=$(datadir)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
+godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
+
 GOBJECTS = $(SOURCES:%.scm=%.go)
 
 nobase_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
