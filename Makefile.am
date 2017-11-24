@@ -45,8 +45,8 @@ AM_SCM_LOG_DRIVER_FLAGS = --brief=yes
 
 AM_SCM_LOG_FLAGS = --no-auto-compile -L "$(top_srcdir)"
 
-EXTRA_DIST += README.md                        \
-              pre-inst-env.in                  \
-              tests/utils.scm                  \
-              build-aux/test-driver.scm        \
-              $(TESTS)
+EXTRA_DIST = README.md                        \
+             pre-inst-env.in                  \
+             tests/utils.scm                  \
+             build-aux/test-driver.scm        \
+             $(TESTS)
