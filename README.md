@@ -39,9 +39,20 @@ Installation
 
 Download the latest tarball and run:
 ```sh
-./configure --prefix=<guile-prefix>
+./configure
 make
 sudo make install
+```
+
+This will install guile-commonmark with the prefix `/usr/local/`. This
+is not in the default load path for GNU Guile. You may choose to
+change the prefix to your GNU Guile's location with `./configure
+--prefix=/usr` or add `/usr/local/` to GNU Guile's load path in your
+`.profile` or `.bash_profile` like this (replacing 2.2 with your GNU
+Guile version):
+```sh
+export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.2${GUILE_LOAD_PATH:+:}$GUILE_LOAD_PATH"
+export GUILE_LOAD_COMPILED_PATH="/usr/local/lib/guile/2.2/site-ccache${GUILE_LOAD_COMPILED_PATH:+:}$GUILE_COMPILED_LOAD_PATH"
 ```
 
 To build from git requires Autoconf and Automake.
