@@ -1,0 +1,27 @@
+# -*- mode: org -*-
+
+#+TITLE: guile-commonmark NEWS
+
+* Changes in 0.2 (since 0.1)
+
+This release update
+
+** CommonMark changes
+
+The changes make this implemenation now follows version 0.27 of the
+CommonMark spec.
+
+*** Tabs
+
+Tabs are no longer expanded to spaces, however when parsing blocks
+they behave like spaces with a tab stop of 4 characters.
+
+*** Paragraphs
+
+Spaces are now stripped from the end of paragraphs so that two or more
+spaces will not become a hard line break.
+
+*** Fenced code
+
+Closing fences of fenced code blocks can now be longer than the
+opening fence.
