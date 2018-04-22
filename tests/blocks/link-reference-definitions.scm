@@ -84,6 +84,17 @@ can contain backslash escapes and literal backslashes"
              ('paragraph _ ('text _ "[foo]")))
   (link-reference? '("foo" "/url\\bar*baz" "foo\"bar\\baz") doc-data) #true)
 
+(block-expect "parse-blocks, link reference definition with no corresponding link
+contributes nothing to the document."
+  "[foo]: /url"
+  ('document doc-data))
+
+(block-expect "parse-blocks, link reference definition with no corresponding link
+contributes nothing to the document."
+  "[\nfoo\n]: /url\nbar"
+  ('document _
+             ('paragraph _ ('text _ "bar"))))
+
 (block-expect "parse-blocks, link reference definition not a link reference definition"
   "[foo]: /url \"title\" ok"
   ('document _
