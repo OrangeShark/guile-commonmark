@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -43,7 +43,7 @@
              ('paragraph _ ('text _ "[Foo*bar\\]]")))
   (link-reference? '("foo*bar\\]" "my_(url)" "'title (with parens)'") doc-data) #true)
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, link reference defitinion"
   "[Foo bar]:\n<my%20url>\n'title'\n\n[Foo bar]"
   ('document doc-data

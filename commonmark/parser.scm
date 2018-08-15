@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -16,7 +16,10 @@
 ;; along with guile-commonmark.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (commonmark parser)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-2)
   #:use-module (srfi srfi-9)
+  #:use-module (srfi srfi-26)
   #:use-module (ice-9 regex)
   #:use-module (commonmark common)
   #:export (make-parser
@@ -93,6 +96,18 @@
                    (%make-parser str pos (+ col count)))))
             (else (loop (+ pos 1) (+ col 1) (- count 1)))))))
 
+(define (parser-advance-optional parser ch)
+  (define new-parser (cut %make-parser
+                          (parser-str parser)
+                          (+ (parser-pos parser) 1)
+                          <>))
+  (if (and (not (parser-end? parser)) (parser-char=? parser ch))
+      (new-parser (+ (parser-col parser)
+                     (case ch
+                       ((#\tab) (- 4 (modulo (parser-col parser) 4)))
+                       (else 1))))
+      parser))
+
 (define (parser-advance-next-nonspace parser)
   (let ((str (parser-str parser)))
     (let loop ((pos (parser-pos parser))
@@ -154,6 +169,12 @@
                                                        "([ \t\v]+|[ \t\v]*\n?[ \t\v]*)"
                                                        link-title
                                                        "?[ \t\v]*(\n|$)")))
+(define re-link-label (make-regexp (string-append link-label ":")))
+(define re-link-destination-brackets (make-regexp (string-append "^<(([^ <>\n\t\\]|"
+                                                                 escaped-characters
+                                                                 ")*)>")))
+(define re-link-destination (make-regexp link-destination))
+(define re-link-title (make-regexp link-title))
 
 
 (define (block-quote parser)
@@ -237,17 +258,81 @@
 (define (ordered-list-delimiter match)
   (match:substring match 2))
 
-(define (link-definition str)
-  (regexp-exec re-link-definition str))
+;; Link Definitions
 
-(define (link-definition-rest match)
-  (match:suffix match))
+(define (make-link-definition label destination title rest)
+  (list label destination title rest))
 
 (define (link-definition-label match)
-  (match:substring match 1))
+  (first match))
 
 (define (link-definition-destination match)
-  (match:substring match 3))
+  (second match))
 
 (define (link-definition-title match)
-  (match:substring match 7))
+  (third match))
+
+(define (link-definition-rest match)
+  (fourth match))
+
+(define (link-definition str)
+  (define (link-label parser)
+    (regexp-exec re-link-label (parser-str parser) (parser-pos parser)))
+  (define (link-label-rest parser match)
+    (parser-advance parser (- (match:end match 0) (parser-pos parser))))
+  (define (link-title parser)
+    (regexp-exec re-link-title (parser-str parser) (parser-pos parser)))
+  (define (link-title-match-rest parser match)
+    (parser-advance parser (- (match:end match 0) (parser-pos parser))))
+  (define (link-title-rest title-match after-dest)
+    (parser-advance-next-nonspace
+     (link-title-match-rest after-dest title-match)))
+  (define skip-optional-whitespace
+    (compose parser-advance-next-nonspace
+             (cut parser-advance-optional <> #\newline)
+             parser-advance-next-nonspace))
+  (and-let* ((parser (make-parser str))
+             (label-match (link-label parser))
+             (after-label (link-label-rest parser label-match))
+             (before-dest (skip-optional-whitespace after-label))
+             (dest-match (link-destination before-dest))
+             (after-dest (parser-advance-next-nonspace (cdr dest-match))))
+    (let ((title-match (link-title (skip-optional-whitespace after-dest))))
+      (cond
+       (title-match
+        (make-link-definition (match:substring label-match 1)
+                              (car dest-match)
+                              (match:substring title-match 1)
+                              (parser-rest-str (link-title-rest title-match after-dest))))
+       ((or (parser-end? after-dest) (parser-char=? after-dest #\newline))
+        (make-link-definition (match:substring label-match 1)
+                              (car dest-match)
+                              #f
+                              (parser-rest-str after-dest)))
+       (else #f)))))
+
+(define (link-destination-brackets parser)
+  (regexp-exec re-link-destination-brackets (parser-str parser) (parser-pos parser)))
+
+(define (link-destination-normal parser)
+  (regexp-exec re-link-destination (parser-str parser) (parser-pos parser)))
+
+(define (link-destination parser)
+  (define (link-destination-rest match)
+    (parser-advance parser (- (match:end match 0) (parser-pos parser))))
+  (define (match:substring-suffix match)
+    (cons (match:substring match 0)
+          (link-destination-rest match)))
+  (define (remove-brackets pair)
+    (cons (substring (car pair) 1 (- (string-length (car pair)) 1))
+          (cdr pair)))
+  (or (and=> (link-destination-brackets parser)
+             (compose remove-brackets match:substring-suffix))
+      (and=> (link-destination-normal parser)
+             match:substring-suffix)))
+
+
+
+
+
+
