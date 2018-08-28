@@ -4,7 +4,8 @@
              (guix git-download)
              (gnu packages guile)
              (gnu packages autotools)
-             (gnu packages pkg-config))
+             (gnu packages pkg-config)
+             (gnu packages texinfo))
 
 (package
   (name "guile-commonmark")
@@ -27,9 +28,10 @@
   (native-inputs
    `(("autoconf" ,autoconf)
      ("automake" ,automake)
+     ("texinfo" ,texinfo)
      ("pkg-config" ,pkg-config)))
   (inputs
-   `(("guile" ,guile-2.0)))
+   `(("guile" ,guile-2.2)))
   (synopsis "CommonMark parser for Guile")
   (description
    "guile-commonmark is a library for parsing CommonMark, a fully specified
