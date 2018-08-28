@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -1024,5 +1024,3 @@ reference, because it is followed by a link label (even though [bar] is not defi
     (x (pk 'fail x #f))))
 
 (test-end)
-
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

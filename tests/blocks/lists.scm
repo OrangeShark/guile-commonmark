@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -51,7 +51,7 @@
                     ('item _ ('paragraph _ ('text _ "bar"))))
              ('paragraph _ ('text _ "Foo"))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, list must start with 1 to interrupt a paragraph"
   "The number of windows in my house is
 14.  The number of doors is 6."
@@ -65,7 +65,7 @@
              ('list _ ('item _ ('paragraph _ ('text _ "The number of doors is 6."))))
              ('paragraph _ ('text _ "The number of windows in my house is"))))
 
-(test-expect-fail 2)
+
 (block-expect "parse-blocks, list there can be any number of blank lines between items"
   "- foo
 
@@ -96,7 +96,7 @@
          ('paragraph _ ('text _ "bar")))
       ('paragraph _ ('text _ "foo")))))
 
-(test-expect-fail 2)
+
 (block-expect "parse-blocks, separate consecutive lists of the same type with blank HTML comment"
   "- foo
 - bar
@@ -120,7 +120,7 @@
   ('document _))
 
 
-(test-expect-fail 2)
+
 (block-expect "parse-blocks, list need not be indented to the same level"
   "- a
  - b
@@ -318,7 +318,7 @@ separated by blank lines"
   (list-tight? inner-list) #t)
 
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, outer list is loose and inner list tight"
   "- a
   - b
@@ -345,4 +345,3 @@ separated by blank lines"
 
 (test-end)
 
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

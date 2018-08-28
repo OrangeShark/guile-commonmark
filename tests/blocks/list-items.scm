@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -103,7 +103,7 @@ not column"
              ('paragraph _ ('text _ "2.two"))
              ('paragraph _ ('text _ "-one"))))
 
-(test-expect-fail 1) ;; TODO list items can contain more than one blank line
+ ;; TODO list items can contain more than one blank line
 (block-expect "parse-blocks, list item may contain blocks separated by more than one blank
 line"
   "- foo
@@ -133,7 +133,7 @@ line"
                            ('fenced-code _ "bar")
                            ('paragraph _ ('text _ "foo"))))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, list item contains indented code block preserve empty lines"
   "- Foo
 
@@ -248,7 +248,7 @@ code block"
                     ('item _ ('fenced-code _ "bar"))
                     ('item _ ('paragraph _ ('text _ "foo"))))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, list item blank line, the number of spaces does not change
 required indentation"
   "-   
@@ -301,7 +301,7 @@ required indentation"
              ('list _
                     ('item _))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, an empty list item cannot interrupt a paragraph"
   "foo
 *
@@ -483,4 +483,3 @@ continued here."
 
 (test-end)
 
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

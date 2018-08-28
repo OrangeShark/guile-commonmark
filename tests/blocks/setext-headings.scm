@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -33,7 +33,7 @@ Foo *bar*
   (heading-level heading-data1) 2
   (heading-level heading-data2) 1)
 
-(test-expect-fail 1) ;;TODO implement multiline headings
+ ;;TODO implement multiline headings
 (block-expect "parse-blocks, setext headings may span more than one line"
   "Foo *bar
 baz*
@@ -128,7 +128,7 @@ bar
              ('thematic-break _)
              ('list _ ('item _ ('paragraph _ ('text _ "Foo"))))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, setext heading a blank line is needed between a paragraph
 and a setext heading"
   "Foo
@@ -200,5 +200,3 @@ constructs other than paragraphs"
   (heading-level heading-data) 2)
 
 (test-end)
-
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

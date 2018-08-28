@@ -1,4 +1,4 @@
-;; Copyright (C) 2016, 2017  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -143,5 +143,3 @@ bar"
                     ('item _ ('paragraph _ ('text _ "Foo"))))))
 
 (test-end)
-
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

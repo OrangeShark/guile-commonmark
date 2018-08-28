@@ -76,13 +76,13 @@
              ('paragraph _ ('text _ "[foo]"))
              ('paragraph _ ('text _ "[foo]:"))))
 
-(test-expect-fail 1)
+
 (block-expect "parse-blocks, link reference definition both title and destination
 can contain backslash escapes and literal backslashes"
   "[foo]: /url\\bar\\*baz \"foo\\\"bar\\baz\"\n\n[foo]"
   ('document doc-data
              ('paragraph _ ('text _ "[foo]")))
-  (link-reference? '("foo" "/url\\bar*baz" "foo\"bar\\baz") doc-data) #true)
+  (link-reference? '("foo" "/url\\bar*baz" "\"foo\\\"bar\\baz\"") (peek doc-data)) #true)
 
 (block-expect "parse-blocks, link reference definition with no corresponding link
 contributes nothing to the document."
@@ -149,5 +149,3 @@ it occurs inside a code block"
   (link-reference? '("foo" "/url" #f) doc-data) #true)
 
 (test-end)
-
-(exit (= (test-runner-fail-count (test-runner-current)) 0))

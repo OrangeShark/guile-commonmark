@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016, 2018  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -137,5 +137,3 @@ code spans and code blocks"
     (x (pk 'fail x #f))))
 
 (test-end)
-
-(exit (= (test-runner-fail-count (test-runner-current)) 0))
