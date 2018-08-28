@@ -8,7 +8,7 @@ This release update
 
 ** CommonMark changes
 
-The changes make this implemenation now follows version 0.27 of the
+The changes make this implemenation now follows version 0.28 of the
 CommonMark spec.
 
 *** Tabs
@@ -25,3 +25,7 @@ spaces will not become a hard line break.
 
 Closing fences of fenced code blocks can now be longer than the
 opening fence.
+
+*** Link reference definitions
+
+Link destinations can be enclosed in an opening < and > characters.
