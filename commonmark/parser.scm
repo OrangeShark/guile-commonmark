@@ -169,7 +169,7 @@
                                                        "([ \t\v]+|[ \t\v]*\n?[ \t\v]*)"
                                                        link-title
                                                        "?[ \t\v]*(\n|$)")))
-(define re-link-label (make-regexp (string-append link-label ":")))
+(define re-link-label (make-regexp (string-append "^" link-label ":")))
 (define re-link-destination-brackets (make-regexp (string-append "^<(([^ <>\n\t\\]|"
                                                                  escaped-characters
                                                                  ")*)>")))
@@ -287,19 +287,19 @@
   (define (link-title-rest title-match after-dest)
     (parser-advance-next-nonspace
      (link-title-match-rest after-dest title-match)))
-  (define skip-optional-whitespace
+  (define skip-optional-whitespace-newline
     (compose parser-advance-next-nonspace
-             (cut parser-advance-optional <> #\newline)
-             parser-advance-next-nonspace))
+             (cut parser-advance-optional <> #\newline)))
   (define (parser-rest-empty? parser)
     (or (parser-end? parser) (parser-char=? parser #\newline)))
   (and-let* ((parser (make-parser str))
-             (label-match (link-label parser))
+             (label-match (link-label (parser-advance-next-nonspace parser)))
              (after-label (link-label-rest parser label-match))
-             (before-dest (skip-optional-whitespace after-label))
-             (dest-match (link-destination before-dest))
+             (before-dest (skip-optional-whitespace-newline after-label))
+             (dest-match (link-destination (parser-advance-next-nonspace before-dest)))
              (after-dest (parser-advance-next-nonspace (cdr dest-match))))
-    (let* ((title-match (link-title (skip-optional-whitespace after-dest)))
+    (let* ((title-match (link-title (parser-advance-next-nonspace
+                                     (skip-optional-whitespace-newline after-dest))))
            (after-title (and title-match (link-title-rest title-match after-dest))))
       (cond
        ;; optional title must have no non-whitespace characters after title
@@ -307,13 +307,16 @@
         (make-link-definition (match:substring label-match 1)
                               (unescape-string (car dest-match))
                               (unescape-string (match:substring title-match 1))
-                              (parser-rest-str (link-title-rest title-match after-dest))))
+                              (parser-rest-str
+                               (skip-optional-whitespace-newline
+                                (link-title-rest title-match after-dest)))))
        ;; must have no non-whitespace characters after destination
        ((parser-rest-empty? after-dest)
         (make-link-definition (match:substring label-match 1)
                               (unescape-string (car dest-match))
                               #f
-                              (parser-rest-str after-dest)))
+                              (parser-rest-str
+                               (skip-optional-whitespace-newline after-dest))))
        (else #f)))))
 
 (define (link-destination-brackets parser)
