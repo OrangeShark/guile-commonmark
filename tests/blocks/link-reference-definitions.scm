@@ -82,7 +82,7 @@ can contain backslash escapes and literal backslashes"
   "[foo]: /url\\bar\\*baz \"foo\\\"bar\\baz\"\n\n[foo]"
   ('document doc-data
              ('paragraph _ ('text _ "[foo]")))
-  (link-reference? '("foo" "/url\\bar*baz" "\"foo\\\"bar\\baz\"") (peek doc-data)) #true)
+  (link-reference? '("foo" "/url\\bar*baz" "\"foo\"bar\\baz\"") doc-data) #true)
 
 (block-expect "parse-blocks, link reference definition with no corresponding link
 contributes nothing to the document."

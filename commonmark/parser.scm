@@ -301,12 +301,12 @@
       (cond
        (title-match
         (make-link-definition (match:substring label-match 1)
-                              (car dest-match)
-                              (match:substring title-match 1)
+                              (unescape-string (car dest-match))
+                              (unescape-string (match:substring title-match 1))
                               (parser-rest-str (link-title-rest title-match after-dest))))
        ((or (parser-end? after-dest) (parser-char=? after-dest #\newline))
         (make-link-definition (match:substring label-match 1)
-                              (car dest-match)
+                              (unescape-string (car dest-match))
                               #f
                               (parser-rest-str after-dest)))
        (else #f)))))
