@@ -291,20 +291,25 @@
     (compose parser-advance-next-nonspace
              (cut parser-advance-optional <> #\newline)
              parser-advance-next-nonspace))
+  (define (parser-rest-empty? parser)
+    (or (parser-end? parser) (parser-char=? parser #\newline)))
   (and-let* ((parser (make-parser str))
              (label-match (link-label parser))
              (after-label (link-label-rest parser label-match))
              (before-dest (skip-optional-whitespace after-label))
              (dest-match (link-destination before-dest))
              (after-dest (parser-advance-next-nonspace (cdr dest-match))))
-    (let ((title-match (link-title (skip-optional-whitespace after-dest))))
+    (let* ((title-match (link-title (skip-optional-whitespace after-dest)))
+           (after-title (and title-match (link-title-rest title-match after-dest))))
       (cond
-       (title-match
+       ;; optional title must have no non-whitespace characters after title
+       ((and title-match (parser-rest-empty? after-title))
         (make-link-definition (match:substring label-match 1)
                               (unescape-string (car dest-match))
                               (unescape-string (match:substring title-match 1))
                               (parser-rest-str (link-title-rest title-match after-dest))))
-       ((or (parser-end? after-dest) (parser-char=? after-dest #\newline))
+       ;; must have no non-whitespace characters after destination
+       ((parser-rest-empty? after-dest)
         (make-link-definition (match:substring label-match 1)
                               (unescape-string (car dest-match))
                               #f
