@@ -36,7 +36,8 @@
 (define re-link-destination (make-regexp link-destination))
 (define re-link-title (make-regexp link-title))
 (define re-link-label (make-regexp link-label))
-(define re-autolink (make-regexp "^<([a-zA-Z][a-zA-Z0-9+.-]{1,31}:[^ \t\n<>\x01-\x19]*)>"))
+(define re-autolink (make-regexp (string-append "^<([a-zA-Z][a-zA-Z0-9+.-]{1,31}:[^ \t\n<>"
+                                                control-characters "]*)>")))
 (define re-email-autolink (make-regexp
                            (string-append "^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
                                           "[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
