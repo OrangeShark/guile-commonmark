@@ -28,4 +28,13 @@ opening fence.
 
 *** Link reference definitions
 
-Link destinations can be enclosed in an opening < and > characters.
+Link destinations can be enclosed in an opening < and > 
+
+** Bug fixes
+
+*** Fix nonportable range expression for control characters
+
+glibc 2.28 made some changes to the collation of Unicode characters
+which affect regular expression ranges. This caused the regular
+expression range for control characters to match charaacters it
+shouldn't.

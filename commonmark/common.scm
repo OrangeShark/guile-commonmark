@@ -20,6 +20,7 @@
   #:use-module (commonmark entities)
   #:export (ascii-punctuation-characters
             escaped-characters
+            control-characters
             regular-characters
             in-parens-no-space
             link-destination
@@ -34,7 +35,9 @@
 ;; to match ']'
 (define ascii-punctuation-characters "]!\"#$%&'()*+,-./:;<=>?@[\\^_`{|}~")
 (define escaped-characters (string-append "\\\\[" ascii-punctuation-characters "]"))
-(define regular-characters "[^\x01-\x19 ()\\\\]")
+;; can't use range as it is not portable
+(define control-characters "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19")
+(define regular-characters (string-append "[^" control-characters " ()\\\\]"))
 (define in-parens-no-space (string-append "\\((" regular-characters "|" escaped-characters "|\\\\)*\\)"))
 (define link-destination (string-append "((" regular-characters "+|"
                                         escaped-characters "|"
