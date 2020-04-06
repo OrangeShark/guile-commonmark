@@ -1,4 +1,4 @@
-;; Copyright (C) 2015  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2015, 2020  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -18,15 +18,19 @@
 (define-module (commonmark sxml)
   #:use-module (srfi srfi-1)
   #:use-module (sxml simple)
+  #:use-module (commonmark blocks)
+  #:use-module (commonmark inlines)
   #:use-module (commonmark node)
-  #:export (document->sxml))
+  #:export (commonmark->sxml))
 
-;; Document -> xml
-;; converts the document into HTML
-;; !!!
 
-(define (document->xml d)
-  (sxml->xml (document->sxml d)))
+(define* (commonmark->sxml #:optional (string-or-port (current-input-port)))
+  "Parses a commonmark document from optional argument STRING-OR-PORT or
+the current input port into SXML."
+  (let ((port (if (string? string-or-port)
+                  (open-input-string string-or-port)
+                  string-or-port)))
+    (document->sxml (parse-inlines (parse-blocks port)))))
 
 
 (define (document->sxml d)

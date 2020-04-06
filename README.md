@@ -7,7 +7,7 @@ a fully specified variant of Markdown.
 Example
 -------
 ```scheme
-(use-modules (commonmark)
+(use-modules (commonmark sxml)
              (sxml simple))
 
 (define doc

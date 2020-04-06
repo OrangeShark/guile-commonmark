@@ -1,4 +1,4 @@
-;; Copyright (C) 2016-2018  Erik Edrosa <erik.edrosa@gmail.com>
+;; Copyright (C) 2016-2018, 2020  Erik Edrosa <erik.edrosa@gmail.com>
 ;;
 ;; This file is part of guile-commonmark
 ;;
@@ -296,7 +296,7 @@
              (label-match (link-label (parser-advance-next-nonspace parser)))
              (after-label (link-label-rest parser label-match))
              (before-dest (skip-optional-whitespace-newline after-label))
-             (dest-match (link-destination (parser-advance-next-nonspace before-dest)))
+             (dest-match (match-link-destination (parser-advance-next-nonspace before-dest)))
              (after-dest (parser-advance-next-nonspace (cdr dest-match))))
     (let* ((title-match (link-title (parser-advance-next-nonspace
                                      (skip-optional-whitespace-newline after-dest))))
@@ -325,7 +325,7 @@
 (define (link-destination-normal parser)
   (regexp-exec re-link-destination (parser-str parser) (parser-pos parser)))
 
-(define (link-destination parser)
+(define (match-link-destination parser)
   (define (link-destination-rest match)
     (parser-advance parser (- (match:end match 0) (parser-pos parser))))
   (define (match:substring-suffix match)
