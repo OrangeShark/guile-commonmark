@@ -31,7 +31,7 @@
      ("texinfo" ,texinfo)
      ("pkg-config" ,pkg-config)))
   (inputs
-   `(("guile" ,guile-2.2)))
+   `(("guile" ,guile-3.0)))
   (synopsis "CommonMark parser for Guile")
   (description
    "guile-commonmark is a library for parsing CommonMark, a fully specified
