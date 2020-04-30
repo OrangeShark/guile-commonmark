@@ -103,7 +103,6 @@ not column"
              ('paragraph _ ('text _ "2.two"))
              ('paragraph _ ('text _ "-one"))))
 
- ;; TODO list items can contain more than one blank line
 (block-expect "parse-blocks, list item may contain blocks separated by more than one blank
 line"
   "- foo
@@ -118,6 +117,7 @@ line"
 
 (block-expect "parse-blocks, list item may contain any kind of block"
   "1.  foo
+
     ```
     bar
     ```

@@ -166,7 +166,7 @@
           ((and (empty-line parser) (no-children? node))
            (add-child-node node (make-blank-node)))
           ((and (empty-line parser) (blank-node? (last-child node)))
-           (close-node (remove-last-child node)))
+           node) ;; may be separated by more than one blank line
           ((empty-line parser)
            (cond ((open-descendant? node 'fenced-code)
                   (parse-container-block node parser))
